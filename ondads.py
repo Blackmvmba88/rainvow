@@ -1,8 +1,10 @@
-import numpy as np
-import sounddevice as sd
+import argparse
+import colorsys
 import sys
 import time
-import colorsys
+
+import numpy as np
+import sounddevice as sd
 
 fs = 44100
 frame_length = 1024
@@ -26,13 +28,36 @@ def rainbow_line(length, t):
     line += "\033[0m"
     return line
 
-stream = sd.InputStream(channels=1, samplerate=fs, callback=audio_callback, blocksize=hop_length)
-stream.start()
+parser = argparse.ArgumentParser(description="Visualize audio as a rainbow bar")
+parser.add_argument(
+    "--simulate",
+    action="store_true",
+    help="Run without microphone using generated audio",
+)
+args = parser.parse_args()
+
+if not args.simulate:
+    try:
+        stream = sd.InputStream(
+            channels=1,
+            samplerate=fs,
+            callback=audio_callback,
+            blocksize=hop_length,
+        )
+        stream.start()
+    except Exception as e:
+        print("Failed to open audio input, falling back to simulation:", e)
+        args.simulate = True
 
 try:
     t = 0.0
     while True:
-        frame = audio_buffer[-frame_length:]
+        if args.simulate:
+            sine_time = np.arange(frame_length) + time.time() * fs
+            frame = 0.5 * np.sin(2 * np.pi * 440 * sine_time / fs)
+            audio_buffer[-frame_length:] = frame
+        else:
+            frame = audio_buffer[-frame_length:]
         rms = np.sqrt(np.mean(frame**2))
         # Más sensible: divisor más pequeño (ajusta si quieres aún más sensibilidad)
         norm_rms = min(rms / 0.02, 1.0)
@@ -46,6 +71,7 @@ try:
 except KeyboardInterrupt:
     pass
 finally:
-    stream.stop()
-    stream.close()
+    if not args.simulate:
+        stream.stop()
+        stream.close()
     print("\nListo.")
