@@ -1,58 +1,65 @@
-"""Keyboard RGB control using OpenRGB.
+"""Control de iluminación RGB del teclado con OpenRGB.
 
-Este script detecta un teclado HID en Windows y controla sus
-luces RGB a través de OpenRGB. Asegúrate de tener OpenRGB
-corriendo con la opción --server y de haber instalado las
-librerías openrgb-python y pywinusb.
+Se conecta a un servidor OpenRGB (local o remoto) y cambia los colores
+de un teclado en un ciclo de arcoíris. Puede mostrarse una pequeña
+representación del color actual en la terminal.
 """
 
-import time
+import argparse
 import colorsys
+import time
 
 from openrgb import OpenRGBClient
 from openrgb.utils import RGBColor
-import pywinusb.hid as hid
 
 
-def find_keyboard():
-    """Devuelve (vendor_id, product_id) del primer teclado HID."""
-    for device in hid.HidDeviceFilter().get_devices():
-        try:
-            caps = device.hid_caps
-            if caps.usage_page == 0x01 and caps.usage == 0x06:
-                return device.vendor_id, device.product_id
-        except AttributeError:
-            continue
-    return None, None
-
-
-def rainbow_cycle(device, steps=360, delay=0.05):
+def rainbow_cycle(device, steps=360, delay=0.05, show=False):
+    """Recorre los colores del arcoíris en el dispositivo."""
     for i in range(steps):
         hue = i / float(steps)
         r, g, b = [int(255 * x) for x in colorsys.hsv_to_rgb(hue, 1, 1)]
         device.set_color(RGBColor(r, g, b))
+        if show:
+            print(f"\r\033[38;2;{r};{g};{b}m█\033[0m", end='', flush=True)
         time.sleep(delay)
 
 
-def main():
-    vid, pid = find_keyboard()
-    if vid is None:
-        print("No se encontró un teclado HID.")
-    else:
-        print(f"Teclado detectado: VID={vid:04X}, PID={pid:04X}")
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Control de luces RGB del teclado via OpenRGB"
+    )
+    parser.add_argument(
+        "--host",
+        default="localhost",
+        help="Direcci\u00f3n del servidor OpenRGB",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=6742,
+        help="Puerto del servidor OpenRGB",
+    )
+    parser.add_argument(
+        "--show",
+        action="store_true",
+        help="Mostrar el color aplicado en la terminal",
+    )
+    args = parser.parse_args()
 
-    client = OpenRGBClient()
+    client = OpenRGBClient(host=args.host, port=args.port)
     keyboards = [d for d in client.devices if d.device_type.name == "KEYBOARD"]
     if not keyboards:
         print("No hay teclados compatibles en OpenRGB.")
         return
 
     keyboard = keyboards[0]
-    print(f"Controlando {keyboard.name} con OpenRGB")
+    print(
+        f"Controlando {keyboard.name} a trav\u00e9s de OpenRGB en {args.host}:{args.port}"
+    )
 
     try:
         while True:
-            rainbow_cycle(keyboard)
+            rainbow_cycle(keyboard, show=args.show)
     except KeyboardInterrupt:
         keyboard.set_color(RGBColor(0, 0, 0))
         print("\nTerminando")
