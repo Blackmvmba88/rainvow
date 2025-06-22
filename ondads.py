@@ -1,51 +1,85 @@
+#!/usr/bin/env python3
+"""Terminal-based rainbow audio visualizer."""
+
+import argparse
+import colorsys
 import numpy as np
 import sounddevice as sd
+import shutil
 import sys
 import time
-import colorsys
 
-fs = 44100
-frame_length = 1024
-hop_length = frame_length // 4
-audio_buffer = np.zeros(fs)
+# Audio settings
+FS = 44100
+FRAME_LENGTH = 1024
+HOP_LENGTH = FRAME_LENGTH // 4
 
-max_line_length = 200  # Doble de largo
-min_line_length = 40   # También el doble
+# Ring buffer for recent audio
+audio_buffer = np.zeros(FS)
 
-def audio_callback(indata, frames, time, status):
+
+def audio_callback(indata, frames, time_info, status):
+    """Store microphone data in the global buffer."""
     global audio_buffer
-    audio_buffer = np.roll(audio_buffer, -len(indata[:, 0]))
-    audio_buffer[-len(indata[:, 0]):] = indata[:, 0]
+    audio_buffer = np.roll(audio_buffer, -frames)
+    audio_buffer[-frames:] = indata[:, 0]
 
-def rainbow_line(length, t):
+
+def rainbow_line(length: int, offset: float) -> str:
+    """Return a string with a rainbow gradient of the given length."""
     line = ""
     for i in range(length):
-        hue = ((i / length) + t) % 1.0
-        r, g, b = [int(255*x) for x in colorsys.hsv_to_rgb(hue, 1, 1)]
+        hue = ((i / length) + offset) % 1.0
+        r, g, b = [int(255 * x) for x in colorsys.hsv_to_rgb(hue, 1, 1)]
         line += f"\033[38;2;{r};{g};{b}m─"
-    line += "\033[0m"
-    return line
+    return line + "\033[0m"
 
-stream = sd.InputStream(channels=1, samplerate=fs, callback=audio_callback, blocksize=hop_length)
-stream.start()
 
-try:
-    t = 0.0
-    while True:
-        frame = audio_buffer[-frame_length:]
-        rms = np.sqrt(np.mean(frame**2))
-        # Más sensible: divisor más pequeño (ajusta si quieres aún más sensibilidad)
-        norm_rms = min(rms / 0.02, 1.0)
-        line_length = int(min_line_length + (max_line_length - min_line_length) * norm_rms)
-        pad = (max_line_length - line_length) // 2
-        line = " " * pad + rainbow_line(line_length, t) + " " * (max_line_length - line_length - pad)
-        sys.stdout.write("\r" + line)
-        sys.stdout.flush()
-        t = (t + 0.01) % 1.0
-        time.sleep(hop_length / fs)
-except KeyboardInterrupt:
-    pass
-finally:
-    stream.stop()
-    stream.close()
-    print("\nListo.")
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Colorful terminal audio visualizer")
+    parser.add_argument(
+        "--sens",
+        type=float,
+        default=0.02,
+        help="amplitude normalization; lower is more sensitive",
+    )
+    parser.add_argument(
+        "--speed", type=float, default=0.01, help="rainbow scroll speed"
+    )
+    args = parser.parse_args()
+
+    # Determine terminal dimensions
+    term_width = shutil.get_terminal_size().columns
+    max_line_length = term_width - 2
+    min_line_length = max(10, term_width // 5)
+
+    stream = sd.InputStream(
+        channels=1, samplerate=FS, callback=audio_callback, blocksize=HOP_LENGTH
+    )
+    stream.start()
+
+    try:
+        offset = 0.0
+        while True:
+            frame = audio_buffer[-FRAME_LENGTH:]
+            rms = np.sqrt(np.mean(frame ** 2))
+            level = min(rms / args.sens, 1.0)
+            length = int(min_line_length + (max_line_length - min_line_length) * level)
+            pad = (max_line_length - length) // 2
+            line = " " * pad + rainbow_line(length, offset) + " " * (
+                max_line_length - length - pad
+            )
+            sys.stdout.write("\r" + line)
+            sys.stdout.flush()
+            offset = (offset + args.speed) % 1.0
+            time.sleep(HOP_LENGTH / FS)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        stream.stop()
+        stream.close()
+        print("\nDone.")
+
+
+if __name__ == "__main__":
+    main()
