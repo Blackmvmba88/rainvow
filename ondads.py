@@ -46,7 +46,7 @@ if not args.simulate:
         )
         stream.start()
     except Exception as e:
-        print("Failed to open audio input, falling back to simulation:", e)
+        print("Failed to open audio input, falling back to simulation:", e, file=sys.stderr)
         args.simulate = True
 
 try:
