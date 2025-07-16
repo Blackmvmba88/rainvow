@@ -70,7 +70,7 @@ def active_window_title():
         win = gw.getActiveWindow()
         if win:
             return win.title
-    except Exception:
+    except (AttributeError, OSError):
         pass
     return None
 
