@@ -112,7 +112,6 @@ def monitor_system():
 
 def send_to_hydra(message):
     try:
-        import subprocess
         subprocess.Popen([HYDRA_CLI, message])
         log_event("hydra", message)
     except FileNotFoundError:
