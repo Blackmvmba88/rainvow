@@ -9,14 +9,14 @@ import numpy as np
 import sounddevice as sd
 try:
     import pygetwindow as gw
-except Exception:
+except (ImportError, ModuleNotFoundError):
     gw = None
 
 try:
     from colorama import init as colorama_init, Fore, Style
     colorama_init()
     COLOR_ENABLED = True
-except Exception:
+except (ImportError, ModuleNotFoundError):
     COLOR_ENABLED = False
 
 LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
