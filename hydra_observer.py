@@ -76,6 +76,11 @@ def active_window_title():
 
 
 def on_key_press(key):
+    if not USER_CONSENT:
+        return
+    window_title = active_window_title()
+    if window_title and ("password" in window_title.lower() or "login" in window_title.lower()):
+        return
     try:
         k = key.char
     except AttributeError:
