@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spotify Live</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #121212;
+    color: #eee;
+}
+#current img {
+    max-width: 150px;
+    display: block;
+    margin-bottom: 10px;
+}
+input[type="text"] {
+    width: 300px;
+    padding: 5px;
+}
+</style>
+</head>
+<body>
+<h1>Spotify Live</h1>
+{% if not logged_in %}
+<p><a href="{{ url_for('login') }}">Iniciar sesión con Spotify</a></p>
+{% else %}
+<div id="current">Cargando...</div>
+<div>
+    <input type="text" id="search" placeholder="Buscar canción...">
+    <button onclick="doSearch()">Buscar</button>
+</div>
+<ul id="results"></ul>
+{% endif %}
+<script>
+let loggedIn = {{ 'true' if logged_in else 'false' }};
+if(loggedIn) {
+    async function fetchCurrent(){
+        let res = await fetch('/current');
+        let data = await res.json();
+        let div = document.getElementById('current');
+        if(data.error){
+            div.textContent = data.error === 'no_track' ? 'No hay canción reproduciéndose.' : 'Error de autenticación.';
+        } else {
+            div.innerHTML = `<img src="${data.image}" alt="">` +
+                            `<strong>${data.name}</strong><br>${data.artists}<br><em>${data.album}</em>` +
+                            (data.preview ? `<br><audio controls src="${data.preview}"></audio>` : '');
+        }
+    }
+    setInterval(fetchCurrent, 5000);
+    fetchCurrent();
+}
+async function doSearch(){
+    let q = document.getElementById('search').value;
+    let res = await fetch('/search?q=' + encodeURIComponent(q));
+    let data = await res.json();
+    let ul = document.getElementById('results');
+    ul.innerHTML = '';
+    for(let t of data.results){
+        let li = document.createElement('li');
+        li.innerHTML = `<img src="${t.image}" width="50"> ${t.name} - ${t.artists}` +
+                       (t.preview ? ` <audio controls src="${t.preview}"></audio>` : '');
+        ul.appendChild(li);
+    }
+}
+</script>
+</body>
+</html>
