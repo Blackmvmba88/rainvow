@@ -110,7 +110,7 @@ def monitor_system():
             print(color("[Hydra] Detected music context - listening for loops...", Fore.MAGENTA))
             send_to_hydra("music_mode")
             record_audio(5)
-        time.sleep(1)
+        time.sleep(SLEEP_DURATION)
 
 
 def send_to_hydra(message):
