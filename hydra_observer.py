@@ -93,8 +93,11 @@ def on_click(x, y, button, pressed):
         log_event("click", {"button": str(button), "pos": [x, y]})
 
 
+shutdown_flag = False
+
 def monitor_system():
-    while True:
+    global shutdown_flag
+    while not shutdown_flag:
         window = active_window_title()
         cpu = psutil.cpu_percent(interval=None)
         mem = psutil.virtual_memory().percent
