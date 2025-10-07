@@ -1,51 +1,96 @@
 import numpy as np
 import sounddevice as sd
-import sys
-import time
-import colorsys
+from rich.console import Console
+from rich.style import Style
 
-fs = 44100
-frame_length = 1024
-hop_length = frame_length // 4
-audio_buffer = np.zeros(fs)
+console = Console()
 
-max_line_length = 200  # Doble de largo
-min_line_length = 40   # También el doble
+# Colores base del arcoíris
+RAINBOW_BASE = [
+    "red",
+    "orange1",
+    "yellow1",
+    "green1",
+    "cyan",
+    "blue",
+    "magenta",
+]
 
-def audio_callback(indata, frames, time, status):
-    global audio_buffer
-    audio_buffer = np.roll(audio_buffer, -len(indata[:, 0]))
-    audio_buffer[-len(indata[:, 0]):] = indata[:, 0]
+N_BANDS = len(RAINBOW_BASE)
+BAR_HEIGHT = 12
 
-def rainbow_line(length, t):
-    line = ""
-    for i in range(length):
-        hue = ((i / length) + t) % 1.0
-        r, g, b = [int(255*x) for x in colorsys.hsv_to_rgb(hue, 1, 1)]
-        line += f"\033[38;2;{r};{g};{b}m─"
-    line += "\033[0m"
-    return line
+FS = 44100
+DURATION = 0.05  # segundos por bloque
+BLOCKSIZE = int(FS * DURATION)
 
-stream = sd.InputStream(channels=1, samplerate=fs, callback=audio_callback, blocksize=hop_length)
-stream.start()
+# Ganancias adaptativas por banda
+gains = np.ones(N_BANDS)
+MIN_GAIN = 0.5
+MAX_GAIN = 10.0
+ADAPT_SPEED = 0.1
 
-try:
-    t = 0.0
-    while True:
-        frame = audio_buffer[-frame_length:]
-        rms = np.sqrt(np.mean(frame**2))
-        # Más sensible: divisor más pequeño (ajusta si quieres aún más sensibilidad)
-        norm_rms = min(rms / 0.02, 1.0)
-        line_length = int(min_line_length + (max_line_length - min_line_length) * norm_rms)
-        pad = (max_line_length - line_length) // 2
-        line = " " * pad + rainbow_line(line_length, t) + " " * (max_line_length - line_length - pad)
-        sys.stdout.write("\r" + line)
-        sys.stdout.flush()
-        t = (t + 0.01) % 1.0
-        time.sleep(hop_length / fs)
-except KeyboardInterrupt:
-    pass
-finally:
-    stream.stop()
-    stream.close()
-    print("\nListo.")
+
+def get_band_amps(audio_block: np.ndarray, fs: int, n_bands: int) -> np.ndarray:
+    """Return amplitude for each frequency band."""
+    fft = np.fft.rfft(audio_block[:, 0] * np.hanning(len(audio_block)))
+    mag = np.abs(fft)
+    freqs = np.fft.rfftfreq(len(audio_block), 1 / fs)
+    max_freq = fs // 2
+    band_edges = np.linspace(0, max_freq, n_bands + 1)
+    amps = []
+    for i in range(n_bands):
+        idx = np.where((freqs >= band_edges[i]) & (freqs < band_edges[i + 1]))[0]
+        if len(idx) > 0:
+            amps.append(mag[idx].max())
+        else:
+            amps.append(0)
+    return np.log1p(amps)
+
+
+shift = 0
+
+
+def audio_source():
+    """Yield audio blocks. Falls back to noise if input fails."""
+    try:
+        with sd.InputStream(channels=1, samplerate=FS, blocksize=BLOCKSIZE) as stream:
+            console.print("Presiona Ctrl+C para detener", style="bold white")
+            while True:
+                yield stream.read(BLOCKSIZE)[0]
+    except Exception as exc:
+        console.print(
+            f"No se pudo iniciar la entrada de audio ({exc}). Se usará ruido de prueba.",
+            style="bold yellow",
+        )
+        while True:
+            yield np.random.uniform(-1, 1, size=(BLOCKSIZE, 1))
+
+
+def run_visualizer():
+    global shift
+    for audio_block in audio_source():
+        amps = get_band_amps(audio_block, FS, N_BANDS)
+        for i in range(N_BANDS):
+            target = 0.7
+            if amps[i] * gains[i] > 0.95:
+                gains[i] = max(gains[i] * (1 - ADAPT_SPEED), MIN_GAIN)
+            elif amps[i] * gains[i] < target:
+                gains[i] = min(gains[i] * (1 + ADAPT_SPEED), MAX_GAIN)
+        amps = amps * gains
+        if amps.max() > 0:
+            amps = amps / amps.max()
+        barra_str = ""
+        for i, amp in enumerate(amps):
+            barras = int(amp * BAR_HEIGHT)
+            color_idx = (i + shift) % N_BANDS
+            color = Style(color=RAINBOW_BASE[color_idx])
+            barra_str += f"[{color}]" + "█" * barras + " " * (BAR_HEIGHT - barras) + "[/]"
+        shift = (shift + 1) % N_BANDS
+        console.print(barra_str, end="\r", highlight=False, soft_wrap=True)
+
+
+if __name__ == "__main__":
+    try:
+        run_visualizer()
+    except KeyboardInterrupt:
+        console.print("\nDetenido por el usuario", style="bold white")
