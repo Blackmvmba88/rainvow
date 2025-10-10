@@ -143,3 +143,54 @@ except Exception:
 5. Follow the established file organization
 6. Include appropriate fallbacks for hardware/service failures
 7. Test with minimal dependencies when possible
+
+## Testing Guidelines
+
+Since this project uses manual testing rather than automated unit tests:
+- Verify Python scripts by running them directly: `python3 script.py`
+- Test Flask applications by starting the server and checking endpoints
+- Validate audio/video components with actual hardware when possible
+- Use fallback modes (test data, noise) when hardware isn't available
+- Document test results in TESTING.md following existing format
+- Check logs/ directory for system observer output during testing
+
+## Build and Validation
+
+- **No build step required**: Python scripts run directly
+- **Linting**: Follow PEP 8, though no automated linter is configured
+- **Dependencies**: Install manually with `pip install <package>`
+- **Git workflow**: Keep commits small and focused
+- **Ignored files**: `.gitignore` excludes `__pycache__/`, `*.pyc`, `.env`
+
+## Security Best Practices
+
+- Never commit sensitive credentials to the repository
+- Use environment variables for API keys and secrets:
+  - `SPOTIPY_CLIENT_ID`, `SPOTIPY_CLIENT_SECRET`, `SPOTIPY_REDIRECT_URI`
+  - `FLASK_SECRET`
+  - `HYDRA_CLI`
+- Store credentials in `.env` (already in `.gitignore`)
+- Validate external inputs in web applications
+- Use OAuth2 flows correctly (see spotify_live/app.py as reference)
+
+## Common Tasks
+
+### Adding a new Python utility
+1. Create script in repository root
+2. Add Spanish docstring at the top
+3. Include try/except for missing dependencies with helpful error messages
+4. Add usage instructions to README.md
+5. Test manually and document in TESTING.md
+
+### Modifying audio/visual components
+1. Maintain modular architecture (separate functions for capture, analysis, visualization)
+2. Keep fallback modes for testing without hardware
+3. Use existing color schemes (rainbow colors, dark backgrounds)
+4. Test with actual hardware when possible
+
+### Updating Flask applications
+1. Maintain existing OAuth flow patterns
+2. Keep Spanish user-facing messages
+3. Test all routes manually
+4. Verify token refresh logic
+5. Update templates/ if UI changes required
