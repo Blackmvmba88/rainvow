@@ -1,10 +1,45 @@
 # Rainvow Tools
 
-Este repositorio contiene utilidades de Python para efectos visuales.
+Este repositorio contiene utilidades de Python para efectos visuales y aplicaciones musicales interactivas.
+
+## ✅ Estado del Proyecto
+
+- **Sistema de Login y Registro**: ✅ Funcionando correctamente
+- **Componentes Musicales Modulares**: ✅ Implementados exitosamente
+- **Colaboración del Equipo**: ✅ Efectiva
+- **Pruebas Básicas**: ✅ Completadas exitosamente
+
+Ver [CHANGELOG.md](CHANGELOG.md) para más detalles sobre las funcionalidades implementadas.
+
+## 📚 Documentación
+
+- **[CHANGELOG.md](CHANGELOG.md)**: Historial de cambios y funcionalidades implementadas
+- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Documentación de la arquitectura modular del proyecto
+- **[TESTING.md](TESTING.md)**: Documentación de pruebas realizadas y resultados
+
+## `spotify_live/`
+Aplicación web Flask que integra login/registro con Spotify OAuth.
+Permite visualizar en tiempo real la canción que estás escuchando
+y buscar canciones en el catálogo de Spotify.
+
+**Características implementadas:**
+- ✅ Sistema de autenticación OAuth con Spotify
+- ✅ Gestión automática de tokens y sesiones
+- ✅ Visualización de canción en reproducción
+- ✅ Búsqueda de canciones con previsualizaciones
+- ✅ Interfaz web responsive
+
+Ver [spotify_live/README.md](spotify_live/README.md) para instrucciones de uso.
 
 ## `ondads.py`
 Visualiza un arcoíris animado en la terminal sincronizado con el audio
 capturado por el micrófono.
+
+**Arquitectura modular:**
+- ✅ Componentes separados y reutilizables
+- ✅ Análisis de frecuencias independiente
+- ✅ Fuente de audio configurable (micrófono o ruido de prueba)
+- ✅ Sistema de ganancia adaptativa automática
 
 ## `keyboard_rgb.py`
 Controla las luces de un teclado a través de

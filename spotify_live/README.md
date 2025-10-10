@@ -1,6 +1,16 @@
 # Spotify Live
 
+✅ **Estado: Sistema de login y registro funcionando correctamente**
+
 Esta miniaplicación permite mostrar en vivo la canción que estás escuchando en tu cuenta de Spotify y buscar otras canciones.
+
+## Funcionalidades Implementadas
+
+- ✅ **Autenticación OAuth 2.0**: Sistema completo de login con Spotify
+- ✅ **Gestión de Sesiones**: Tokens persistentes con renovación automática
+- ✅ **Visualización en Tiempo Real**: Muestra la canción actual con carátula
+- ✅ **Búsqueda de Canciones**: Explora el catálogo de Spotify
+- ✅ **Previsualizaciones de Audio**: Escucha fragmentos de las canciones
 
 ## Requisitos
 
