@@ -144,53 +144,215 @@ except Exception:
 6. Include appropriate fallbacks for hardware/service failures
 7. Test with minimal dependencies when possible
 
-## Testing Guidelines
+## Testing and Quality Assurance
 
-Since this project uses manual testing rather than automated unit tests:
-- Verify Python scripts by running them directly: `python3 script.py`
-- Test Flask applications by starting the server and checking endpoints
-- Validate audio/video components with actual hardware when possible
-- Use fallback modes (test data, noise) when hardware isn't available
-- Document test results in TESTING.md following existing format
-- Check logs/ directory for system observer output during testing
+### Manual Testing
+Since this is a collection of utilities without formal test suites, testing is primarily manual:
 
-## Build and Validation
+1. **Audio Scripts**: Test with actual audio input or verify fallback to test data
+   ```bash
+   python3 ondads.py  # Should show rainbow visualization or fallback gracefully
+   ```
 
-- **No build step required**: Python scripts run directly
-- **Linting**: Follow PEP 8, though no automated linter is configured
-- **Dependencies**: Install manually with `pip install <package>`
-- **Git workflow**: Keep commits small and focused
-- **Ignored files**: `.gitignore` excludes `__pycache__/`, `*.pyc`, `.env`
+2. **Spotify Integration**: Test OAuth flow and API calls
+   ```bash
+   cd spotify_live && python3 app.py  # Access http://localhost:8888
+   ```
 
-## Security Best Practices
+3. **System Observer**: Verify monitoring and logging
+   ```bash
+   python3 hydra_observer.py  # Check logs/ directory for output
+   ```
 
-- Never commit sensitive credentials to the repository
-- Use environment variables for API keys and secrets:
-  - `SPOTIPY_CLIENT_ID`, `SPOTIPY_CLIENT_SECRET`, `SPOTIPY_REDIRECT_URI`
-  - `FLASK_SECRET`
-  - `HYDRA_CLI`
-- Store credentials in `.env` (already in `.gitignore`)
-- Validate external inputs in web applications
-- Use OAuth2 flows correctly (see spotify_live/app.py as reference)
+4. **AR Demos**: Test in browser with HTTPS or localhost
+   ```bash
+   python3 -m http.server 8000  # Access http://localhost:8000/ar.html
+   ```
 
-## Common Tasks
+### Code Quality
+- Follow PEP 8 for Python code
+- Use descriptive variable names in Spanish for user-facing strings
+- Keep functions small and focused (see modular design in ondads.py)
+- Always include error handling with try/except blocks
+- Test graceful degradation when dependencies are missing
 
-### Adding a new Python utility
-1. Create script in repository root
-2. Add Spanish docstring at the top
-3. Include try/except for missing dependencies with helpful error messages
-4. Add usage instructions to README.md
-5. Test manually and document in TESTING.md
+### Validation Checklist
+Before submitting changes:
+- [ ] Code runs without errors
+- [ ] Fallback behavior works when hardware/services unavailable
+- [ ] Spanish text is grammatically correct
+- [ ] No new unnecessary dependencies introduced
+- [ ] Dark theme preserved in HTML/web interfaces
+- [ ] Existing functionality not broken
 
-### Modifying audio/visual components
-1. Maintain modular architecture (separate functions for capture, analysis, visualization)
-2. Keep fallback modes for testing without hardware
-3. Use existing color schemes (rainbow colors, dark backgrounds)
-4. Test with actual hardware when possible
+## Dependency Management
 
-### Updating Flask applications
-1. Maintain existing OAuth flow patterns
-2. Keep Spanish user-facing messages
-3. Test all routes manually
-4. Verify token refresh logic
-5. Update templates/ if UI changes required
+### Python Dependencies
+Install required packages individually as needed:
+
+```bash
+# Audio visualization
+pip install numpy sounddevice rich colorama
+
+# System monitoring
+pip install psutil pynput pygetwindow
+
+# Spotify integration
+pip install spotipy flask
+
+# RGB keyboard control
+pip install openrgb-python
+
+# Screenshots
+pip install pyautogui
+```
+
+**Note**: Not all dependencies are required for all scripts. Each script handles missing dependencies gracefully with try/except blocks.
+
+### macOS Dependencies (for live.sh)
+```bash
+brew install scrcpy vlc switchaudio-osx
+brew install --cask android-platform-tools  # for adb
+```
+
+### Checking Dependencies
+Each Python script should check for dependencies and provide helpful error messages:
+
+```python
+try:
+    import required_module
+except ImportError:
+    print("Please install: pip install required_module")
+    # Optionally provide fallback behavior
+```
+
+## Troubleshooting Common Issues
+
+### Audio Not Working
+- **Issue**: `ondads.py` shows no audio input or errors
+- **Solution**: Check microphone permissions, try fallback mode, verify sounddevice installation
+- **Fallback**: Script automatically generates test data if audio fails
+
+### Spotify API Errors
+- **Issue**: OAuth flow fails or 401 errors
+- **Solution**: Verify `SPOTIPY_CLIENT_ID`, `SPOTIPY_CLIENT_SECRET`, and `SPOTIPY_REDIRECT_URI` environment variables
+- **Check**: Ensure redirect URI matches exactly in Spotify Developer Dashboard
+
+### AR Demo Not Loading Camera
+- **Issue**: Camera permission denied or AR.js not detecting marker
+- **Solution**: Use HTTPS or localhost, grant camera permissions, use HIRO marker
+- **Test**: Print HIRO marker from https://github.com/AR-js-org/AR.js#hiro-marker
+
+### RGB Keyboard Not Responding
+- **Issue**: `keyboard_rgb.py` cannot connect to OpenRGB
+- **Solution**: Ensure OpenRGB server is running, check connection settings
+- **Verify**: OpenRGB SDK server must be enabled in OpenRGB settings
+
+### System Observer Not Logging
+- **Issue**: `hydra_observer.py` not creating logs
+- **Solution**: Check write permissions for logs/ directory
+- **Check**: Verify `pygetwindow` works on your platform (may not work on all systems)
+
+## Examples and Patterns
+
+### Creating a New Audio Visualizer
+```python
+import numpy as np
+import sounddevice as sd
+from rich.console import Console
+
+console = Console()
+
+def audio_callback(indata, frames, time, status):
+    """Process audio data in real-time"""
+    if status:
+        console.print(f"[red]Error: {status}[/red]")
+    
+    # Your visualization logic here
+    volume = np.linalg.norm(indata) * 10
+    console.print(f"[cyan]Volume: {volume:.2f}[/cyan]")
+
+try:
+    with sd.InputStream(callback=audio_callback, channels=1):
+        console.print("[green]Starting audio visualization...[/green]")
+        sd.sleep(10000)  # Run for 10 seconds
+except Exception as e:
+    console.print(f"[yellow]Audio not available: {e}[/yellow]")
+    # Fallback to test data
+```
+
+### Adding a New Spotify Endpoint
+```python
+@app.route('/api/recently-played')
+def recently_played():
+    """Get user's recently played tracks"""
+    token = session.get('token')
+    if not token:
+        return jsonify({'error': 'No autenticado'}), 401
+    
+    try:
+        sp = spotipy.Spotify(auth=token)
+        results = sp.current_user_recently_played(limit=10)
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+```
+
+### Creating a New Hydra Effect
+```html
+<script src="https://unpkg.com/hydra-synth"></script>
+<script>
+  const hydra = new Hydra({ detectAudio: false });
+  
+  // Custom rainbow pattern
+  osc(10, 0.1, 1.5)
+    .color(1.0, 0.5, 0.8)
+    .rotate(0, 0.1)
+    .modulate(osc(3, 0.5))
+    .out();
+</script>
+```
+
+### System Monitoring Pattern
+```python
+import psutil
+import time
+
+def monitor_loop(interval=1.0):
+    """Monitor system resources continuously"""
+    while True:
+        cpu = psutil.cpu_percent(interval=None)
+        mem = psutil.virtual_memory().percent
+        
+        # Your monitoring logic here
+        if cpu > 80:
+            print(f"⚠️  High CPU usage: {cpu}%")
+        
+        time.sleep(interval)
+
+if __name__ == "__main__":
+    try:
+        monitor_loop()
+    except KeyboardInterrupt:
+        print("Monitoring stopped")
+```
+
+## Project Maintenance
+
+### Adding New Features
+1. Create standalone script or extend existing component
+2. Follow existing patterns (error handling, fallbacks, Spanish messages)
+3. Update README.md with new feature description
+4. Add example usage to this file if pattern is reusable
+
+### Updating Dependencies
+- Test thoroughly before updating major versions
+- Maintain backward compatibility where possible
+- Document breaking changes in CHANGELOG.md
+
+### Documentation Updates
+When code changes:
+1. Update relevant README sections
+2. Update ARCHITECTURE.md if modular structure changes
+3. Add examples to this copilot-instructions.md if new patterns introduced
+4. Update CHANGELOG.md with notable changes
