@@ -30,7 +30,10 @@ log_lock = threading.Lock()
 
 HYDRA_CLI = os.environ.get("HYDRA_CLI", "hydra")
 USER_CONSENT = os.environ.get("USER_CONSENT", "true").lower() in ("true", "1", "yes")
-SLEEP_DURATION = float(os.environ.get("SLEEP_DURATION", "2.0"))
+try:
+    SLEEP_DURATION = float(os.environ.get("SLEEP_DURATION", "2.0"))
+except ValueError:
+    SLEEP_DURATION = 2.0
 
 
 def color(text, c):
