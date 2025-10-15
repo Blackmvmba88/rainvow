@@ -222,19 +222,52 @@ assert all(amp >= 0 for amp in amps)
 - Arquitectura permite fácil extensión y mantenimiento
 - Colaboración del equipo fue efectiva
 
+## Estructura de Tests Automatizados
+
+### Tests Implementados
+
+El proyecto ahora incluye una estructura básica de tests en el directorio `tests/`:
+
+```
+tests/
+├── __init__.py
+└── test_spotify_live.py  # Tests básicos para Spotify Live
+```
+
+### Ejecutar Tests
+
+```bash
+# Ejecutar con pytest (recomendado)
+pytest tests/ -v
+
+# Ejecutar tests individuales
+python3 tests/test_spotify_live.py
+
+# Con cobertura
+pytest tests/ --cov=. --cov-report=term-missing
+```
+
+### Tests Actuales
+
+#### test_spotify_live.py
+- ✅ Verificación de imports de módulos
+- ✅ Validación de lógica de tokens
+- ✅ Validación de parámetros de búsqueda
+
 ## Próximos Pasos para Testing
 
 Para mejorar la cobertura de pruebas en futuras iteraciones:
 
 1. **Pruebas Unitarias Automatizadas**
-   - Crear suite de tests con pytest
+   - Expandir suite de tests con pytest
    - Tests para get_band_amps con diferentes inputs
-   - Tests para gestión de tokens
+   - Tests para gestión de tokens con mocks
    - Mocks para Spotify API
 
 2. **Pruebas de Integración**
    - Tests end-to-end del flujo OAuth
    - Tests de renderizado de visualizador
+   - Tests de endpoints de Flask
 
 3. **Pruebas de Performance**
    - Latencia del visualizador
@@ -245,3 +278,12 @@ Para mejorar la cobertura de pruebas en futuras iteraciones:
    - Tests de interfaz con Selenium
    - Verificación de responsive design
    - Compatibilidad cross-browser
+
+## CI/CD Integration
+
+Los tests se ejecutan automáticamente en el pipeline de CI/CD:
+- En cada push a `main` o `develop`
+- En cada Pull Request
+- Semanalmente (lunes 9:00 UTC)
+
+Ver resultados en: [GitHub Actions](https://github.com/Blackmvmba88/rainvow/actions)
