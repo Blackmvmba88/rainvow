@@ -10,11 +10,25 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    timeout-minutes: 10  # Prevenir bloqueos indefinidos
+    
     steps:
     - uses: actions/checkout@v4
+    
     - name: Build the site in the jekyll/builder container
+      timeout-minutes: 8  # Timeout específico para el build
       run: |
         docker run \
         -v ${{ github.workspace }}:/srv/jekyll -v ${{ github.workspace }}/_site:/srv/jekyll/_site \
         jekyll/builder:latest /bin/bash -c "chmod -R 777 /srv/jekyll && jekyll build --future"
+    
+    - name: Check build artifacts
+      if: success()
+      run: |
+        if [ -d "_site" ]; then
+          echo "✅ Build exitoso - directorio _site generado"
+          ls -la _site/
+        else
+          echo "⚠️  Advertencia: directorio _site no encontrado"
+          exit 1
+        fi
