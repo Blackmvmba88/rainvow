@@ -61,7 +61,10 @@ def main() -> None:
         while True:
             rainbow_cycle(keyboard, show=args.show)
     except KeyboardInterrupt:
-        keyboard.set_color(RGBColor(0, 0, 0))
+        try:
+            keyboard.set_color(RGBColor(0, 0, 0))
+        except Exception as e:
+            print(f"\nError al apagar el teclado: {e}")
         print("\nTerminando")
 
 
