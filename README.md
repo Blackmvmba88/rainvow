@@ -8,14 +8,49 @@ Este repositorio contiene utilidades de Python para efectos visuales y aplicacio
 - **Componentes Musicales Modulares**: ✅ Implementados exitosamente
 - **Colaboración del Equipo**: ✅ Efectiva
 - **Pruebas Básicas**: ✅ Completadas exitosamente
+- **Documentación y Onboarding**: ✅ Mejorada y actualizada
 
 Ver [CHANGELOG.md](CHANGELOG.md) para más detalles sobre las funcionalidades implementadas.
 
+## 🚀 Inicio Rápido
+
+### Instalación Rápida
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/Blackmvmba88/rainvow.git
+cd rainvow
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+# Ejecutar el visualizador de audio
+python3 ondads.py
+```
+
+**Para instrucciones detalladas**, consulta [QUICKSTART.md](QUICKSTART.md).
+
+### Requisitos
+
+- Python 3.8 o superior
+- Micrófono (para visualizador de audio)
+- Cuenta de Spotify Developer (para integración musical)
+
+Ver [requirements.txt](requirements.txt) para la lista completa de dependencias.
+
 ## 📚 Documentación
 
+### Documentos Principales
+
+- **[QUICKSTART.md](QUICKSTART.md)**: 🚀 **¡Empieza aquí!** Guía de inicio rápido para nuevos usuarios
+- **[PROJECT_STATUS.md](PROJECT_STATUS.md)**: Estado actual del proyecto, métricas y roadmap
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**: Documentación completa de APIs y componentes reutilizables
+
+### Documentos Técnicos
+
+- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Arquitectura modular del proyecto
+- **[TESTING.md](TESTING.md)**: Pruebas realizadas y resultados
 - **[CHANGELOG.md](CHANGELOG.md)**: Historial de cambios y funcionalidades implementadas
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Documentación de la arquitectura modular del proyecto
-- **[TESTING.md](TESTING.md)**: Documentación de pruebas realizadas y resultados
 
 ## `spotify_live/`
 Aplicación web Flask que integra login/registro con Spotify OAuth.
