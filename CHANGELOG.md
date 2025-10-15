@@ -2,6 +2,11 @@
 
 Todos los cambios notables de este proyecto serán documentados en este archivo.
 
+## [No publicado] - 2025-10-15
+
+### Nuevo
+- ✅ Agregado `holi.py`: Script de saludo colorido animado con estilo arcoíris
+
 ## [No publicado] - 2025-10-10
 
 ### Completado
