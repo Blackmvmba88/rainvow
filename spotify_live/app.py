@@ -138,19 +138,19 @@ def current():
     else:
         return jsonify({'error': 'no_track'})
 
-def clean_expired_cache():
-    """Limpia entradas expiradas del caché para prevenir crecimiento ilimitado.
+def _clean_expired_cache_unsafe():
+    """Limpia entradas expiradas del caché sin adquirir el lock.
     
-    Debe ser llamado periódicamente para mantener el caché en un tamaño manejable.
+    ADVERTENCIA: Esta función debe ser llamada solo cuando cache_lock ya está adquirido.
+    No es thread-safe por sí sola.
     """
-    with cache_lock:
-        now = time.time()
-        expired_keys = [
-            k for k, v in SEARCH_CACHE.items() 
-            if now - v['timestamp'] >= CACHE_EXPIRY_SECONDS
-        ]
-        for k in expired_keys:
-            del SEARCH_CACHE[k]
+    now = time.time()
+    expired_keys = [
+        k for k, v in SEARCH_CACHE.items() 
+        if now - v['timestamp'] >= CACHE_EXPIRY_SECONDS
+    ]
+    for k in expired_keys:
+        del SEARCH_CACHE[k]
 
 
 @app.route('/search')
@@ -193,7 +193,7 @@ def search():
         
         # Limpiar caché si ha crecido demasiado
         if len(SEARCH_CACHE) >= CACHE_MAX_SIZE:
-            clean_expired_cache()
+            _clean_expired_cache_unsafe()
             # Si aún está lleno después de limpiar, remover la entrada más antigua
             if len(SEARCH_CACHE) >= CACHE_MAX_SIZE:
                 oldest_key = min(SEARCH_CACHE.keys(), 
