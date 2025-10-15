@@ -25,6 +25,7 @@ El servidor escucha en http://0.0.0.0:8888
 
 import os
 import time
+import threading
 from flask import Flask, redirect, request, session, url_for, jsonify, render_template
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -32,10 +33,12 @@ from spotipy.oauth2 import SpotifyOAuth
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET', 'change-me')
 
-# Caché simple para optimizar búsquedas repetidas
+# Caché thread-safe para optimizar búsquedas repetidas
 # Estructura: {query: {'results': [...], 'timestamp': time.time()}}
 SEARCH_CACHE = {}
 CACHE_EXPIRY_SECONDS = 300  # 5 minutos
+CACHE_MAX_SIZE = 100  # Máximo de entradas en caché
+cache_lock = threading.Lock()  # Lock para acceso thread-safe
 
 CLIENT_ID = os.environ.get('SPOTIPY_CLIENT_ID')
 CLIENT_SECRET = os.environ.get('SPOTIPY_CLIENT_SECRET')
@@ -135,6 +138,21 @@ def current():
     else:
         return jsonify({'error': 'no_track'})
 
+def clean_expired_cache():
+    """Limpia entradas expiradas del caché para prevenir crecimiento ilimitado.
+    
+    Debe ser llamado periódicamente para mantener el caché en un tamaño manejable.
+    """
+    with cache_lock:
+        now = time.time()
+        expired_keys = [
+            k for k, v in SEARCH_CACHE.items() 
+            if now - v['timestamp'] >= CACHE_EXPIRY_SECONDS
+        ]
+        for k in expired_keys:
+            del SEARCH_CACHE[k]
+
+
 @app.route('/search')
 def search():
     """API endpoint para búsqueda de canciones en Spotify.
@@ -142,8 +160,9 @@ def search():
     Busca canciones en el catálogo de Spotify usando el query proporcionado
     y retorna los primeros 5 resultados con información relevante.
     
-    Implementa caché en memoria para optimizar búsquedas repetidas,
-    reduciendo llamadas innecesarias a la API de Spotify.
+    Implementa caché thread-safe en memoria para optimizar búsquedas repetidas,
+    reduciendo llamadas innecesarias a la API de Spotify. El caché tiene límite
+    de tamaño y limpieza automática de entradas expiradas.
     
     Query Parameters:
         q: Término de búsqueda
@@ -163,13 +182,23 @@ def search():
     if not query:
         return jsonify({'results': []})
     
-    # Verificar caché primero
+    # Verificar caché primero (thread-safe)
     query_lower = query.lower()
-    if query_lower in SEARCH_CACHE:
-        cached = SEARCH_CACHE[query_lower]
-        # Verificar si el caché no ha expirado
-        if time.time() - cached['timestamp'] < CACHE_EXPIRY_SECONDS:
-            return jsonify({'results': cached['results'], 'cached': True})
+    with cache_lock:
+        if query_lower in SEARCH_CACHE:
+            cached = SEARCH_CACHE[query_lower]
+            # Verificar si el caché no ha expirado
+            if time.time() - cached['timestamp'] < CACHE_EXPIRY_SECONDS:
+                return jsonify({'results': cached['results'], 'cached': True})
+        
+        # Limpiar caché si ha crecido demasiado
+        if len(SEARCH_CACHE) >= CACHE_MAX_SIZE:
+            clean_expired_cache()
+            # Si aún está lleno después de limpiar, remover la entrada más antigua
+            if len(SEARCH_CACHE) >= CACHE_MAX_SIZE:
+                oldest_key = min(SEARCH_CACHE.keys(), 
+                               key=lambda k: SEARCH_CACHE[k]['timestamp'])
+                del SEARCH_CACHE[oldest_key]
     
     # Si no hay caché válido, consultar Spotify API
     sp = spotipy.Spotify(auth=token)
@@ -183,11 +212,12 @@ def search():
             'preview': item['preview_url']
         })
     
-    # Guardar en caché
-    SEARCH_CACHE[query_lower] = {
-        'results': tracks,
-        'timestamp': time.time()
-    }
+    # Guardar en caché (thread-safe)
+    with cache_lock:
+        SEARCH_CACHE[query_lower] = {
+            'results': tracks,
+            'timestamp': time.time()
+        }
     
     return jsonify({'results': tracks, 'cached': False})
 
