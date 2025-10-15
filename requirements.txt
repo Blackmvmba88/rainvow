@@ -1,0 +1,29 @@
+# Rainvow Project Dependencies
+# Install all: pip install -r requirements.txt
+
+# Core audio visualization (ondads.py)
+numpy>=1.24.0
+sounddevice>=0.4.6
+rich>=13.0.0
+colorama>=0.4.6
+
+# System monitoring (hydra_observer.py)
+psutil>=5.9.0
+pynput>=1.7.6
+pygetwindow>=0.0.9; sys_platform != 'darwin'  # No funciona en macOS
+
+# Spotify integration (spotify_live/)
+flask>=3.0.0
+spotipy>=2.23.0
+
+# RGB keyboard control (keyboard_rgb.py)
+openrgb-python>=0.2.15
+
+# Screenshots (screenshot.py)
+pyautogui>=0.9.54
+pillow>=10.0.0
+
+# Optional development tools
+# pytest>=7.4.0  # Para pruebas automatizadas
+# black>=23.0.0  # Para formateo de código
+# flake8>=6.0.0  # Para linting

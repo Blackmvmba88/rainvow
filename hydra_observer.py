@@ -3,6 +3,7 @@ import os
 import time
 import datetime
 import threading
+import subprocess
 import psutil
 from pynput import keyboard, mouse
 import numpy as np
@@ -28,6 +29,8 @@ logs = []
 log_lock = threading.Lock()
 
 HYDRA_CLI = os.environ.get("HYDRA_CLI", "hydra")
+SLEEP_DURATION = float(os.environ.get("HYDRA_SLEEP_DURATION", "2.0"))
+USER_CONSENT = os.environ.get("HYDRA_USER_CONSENT", "false").lower() in ("true", "1", "yes")
 
 
 def color(text, c):
