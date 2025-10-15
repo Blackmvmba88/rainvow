@@ -1,5 +1,9 @@
 # Rainvow Tools
 
+[![CI/CD Pipeline](https://github.com/Blackmvmba88/rainvow/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Blackmvmba88/rainvow/actions/workflows/ci-cd.yml)
+[![Jekyll CI](https://github.com/Blackmvmba88/rainvow/actions/workflows/jekyll-docker.yml/badge.svg)](https://github.com/Blackmvmba88/rainvow/actions/workflows/jekyll-docker.yml)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+
 Este repositorio contiene utilidades de Python para efectos visuales y aplicaciones musicales interactivas.
 
 ## ✅ Estado del Proyecto
@@ -82,6 +86,23 @@ Para optimizar el rendimiento del visualizador de audio:
 - El sistema usa ganancia adaptativa para ajustar niveles automáticamente
 - FFT optimizado con numpy para procesamiento rápido
 - Actualización visual eficiente con rich console
+
+## 🔄 CI/CD y Calidad de Código
+
+El proyecto cuenta con un pipeline de CI/CD completo que incluye:
+
+- **Análisis de Código**: Linting automático con flake8, black e isort
+- **Seguridad**: Análisis con bandit y safety para detectar vulnerabilidades
+- **Validación**: Verificación de sintaxis Python y documentación
+- **Revisiones Automáticas**: Ejecución programada cada lunes
+- **Notificaciones**: Alertas automáticas en caso de fallos
+
+El pipeline se ejecuta automáticamente en:
+- Cada push a `main` o `develop`
+- Cada Pull Request
+- Semanalmente (lunes 9:00 UTC)
+
+Ver el estado actual en los badges al inicio del README.
 
 ## `spotify_live/`
 Aplicación web Flask que integra login/registro con Spotify OAuth.
