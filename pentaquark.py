@@ -1,3 +1,14 @@
+"""Visualización animada de un pentaquark usando ASCII art coloreado.
+
+Muestra una representación visual de un pentaquark (partícula subatómica
+compuesta de 4 quarks y 1 antiquark) con colores que rotan continuamente.
+
+Uso:
+    python3 pentaquark.py
+
+El programa se ejecuta hasta recibir Ctrl+C.
+"""
+
 import os
 import time
 from colorama import init, Fore, Style
@@ -15,6 +26,17 @@ ASCII_LINES = [
 ]
 
 def show_pentaquark(colors):
+    """Muestra una representación visual de un pentaquark con colores animados.
+    
+    Renderiza un pentaquark (partícula subatómica con 4 quarks y 1 antiquark)
+    usando caracteres ASCII coloreados.
+    
+    Args:
+        colors: Lista de 4 colores de colorama para los quarks
+        
+    Note:
+        El antiquark siempre se muestra en color magenta para diferenciarlo
+    """
     os.system('clear')
     q0, q1, q2, q3 = [c + 'Q' + Style.RESET_ALL for c in colors]
     print("Pentaquark:\n")

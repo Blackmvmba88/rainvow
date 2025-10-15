@@ -1,10 +1,41 @@
+"""Aplicación web Flask para integración con Spotify.
+
+Esta aplicación proporciona autenticación OAuth con Spotify y permite
+visualizar la canción que se está reproduciendo actualmente, además de
+buscar canciones en el catálogo de Spotify.
+
+Características:
+    - Sistema de autenticación OAuth 2.0 con Spotify
+    - Gestión automática de tokens con renovación
+    - Visualización de canción actual en reproducción
+    - Búsqueda de canciones con caché para optimización
+    - API REST para integración con frontends
+
+Variables de entorno requeridas:
+    SPOTIPY_CLIENT_ID: Client ID de Spotify Developer Dashboard
+    SPOTIPY_CLIENT_SECRET: Client Secret de Spotify Developer Dashboard
+    SPOTIPY_REDIRECT_URI: URI de callback (default: http://localhost:8888/callback)
+    FLASK_SECRET: Secreto para sesiones Flask (default: 'change-me')
+
+Uso:
+    python3 app.py
+
+El servidor escucha en http://0.0.0.0:8888
+"""
+
 import os
+import time
 from flask import Flask, redirect, request, session, url_for, jsonify, render_template
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET', 'change-me')
+
+# Caché simple para optimizar búsquedas repetidas
+# Estructura: {query: {'results': [...], 'timestamp': time.time()}}
+SEARCH_CACHE = {}
+CACHE_EXPIRY_SECONDS = 300  # 5 minutos
 
 CLIENT_ID = os.environ.get('SPOTIPY_CLIENT_ID')
 CLIENT_SECRET = os.environ.get('SPOTIPY_CLIENT_SECRET')
@@ -17,6 +48,18 @@ sp_oauth = SpotifyOAuth(client_id=CLIENT_ID,
                         scope=SCOPE)
 
 def get_token():
+    """Obtiene un token de acceso válido de Spotify desde la sesión.
+    
+    Verifica si existe un token en la sesión, comprueba su validez,
+    y lo renueva automáticamente si está expirado usando el refresh token.
+    
+    Returns:
+        str or None: Token de acceso válido, o None si no hay sesión activa
+        
+    Note:
+        Esta función centraliza la lógica de gestión de tokens OAuth,
+        facilitando el mantenimiento y reduciendo código duplicado.
+    """
     token_info = session.get('token_info')
     if token_info and not sp_oauth.is_token_expired(token_info):
         return token_info['access_token']
@@ -28,17 +71,33 @@ def get_token():
 
 @app.route('/')
 def index():
+    """Página principal de la aplicación.
+    
+    Muestra la interfaz de usuario y pasa el estado de autenticación
+    al template para mostrar/ocultar elementos según corresponda.
+    """
     token = get_token()
     logged_in = token is not None
     return render_template('index.html', logged_in=logged_in)
 
 @app.route('/login')
 def login():
+    """Inicia el flujo de autenticación OAuth con Spotify.
+    
+    Redirige al usuario a la página de autorización de Spotify
+    donde puede dar permisos a la aplicación.
+    """
     auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
 
 @app.route('/callback')
 def callback():
+    """Procesa el callback de OAuth después de la autorización.
+    
+    Spotify redirige aquí después de que el usuario autoriza la app.
+    Intercambia el código de autorización por tokens de acceso
+    y los guarda en la sesión del usuario.
+    """
     code = request.args.get('code')
     token_info = sp_oauth.get_access_token(code)
     session['token_info'] = token_info
@@ -46,6 +105,19 @@ def callback():
 
 @app.route('/current')
 def current():
+    """API endpoint que retorna información de la canción actual.
+    
+    Consulta la API de Spotify para obtener la canción que el usuario
+    está reproduciendo en este momento.
+    
+    Returns:
+        JSON con datos de la canción (nombre, artistas, álbum, imagen, preview)
+        o error si no hay autenticación o no hay canción reproduciéndose
+        
+    Status Codes:
+        200: Canción encontrada y retornada exitosamente
+        401: No autenticado
+    """
     token = get_token()
     if not token:
         return jsonify({'error': 'not_authenticated'}), 401
@@ -65,12 +137,41 @@ def current():
 
 @app.route('/search')
 def search():
+    """API endpoint para búsqueda de canciones en Spotify.
+    
+    Busca canciones en el catálogo de Spotify usando el query proporcionado
+    y retorna los primeros 5 resultados con información relevante.
+    
+    Implementa caché en memoria para optimizar búsquedas repetidas,
+    reduciendo llamadas innecesarias a la API de Spotify.
+    
+    Query Parameters:
+        q: Término de búsqueda
+        
+    Returns:
+        JSON con array de resultados, cada uno con nombre, artistas, imagen y preview
+        
+    Status Codes:
+        200: Búsqueda exitosa (puede tener 0 resultados)
+        401: No autenticado
+    """
     token = get_token()
     if not token:
         return jsonify({'error': 'not_authenticated'}), 401
+    
     query = request.args.get('q', '')
     if not query:
         return jsonify({'results': []})
+    
+    # Verificar caché primero
+    query_lower = query.lower()
+    if query_lower in SEARCH_CACHE:
+        cached = SEARCH_CACHE[query_lower]
+        # Verificar si el caché no ha expirado
+        if time.time() - cached['timestamp'] < CACHE_EXPIRY_SECONDS:
+            return jsonify({'results': cached['results'], 'cached': True})
+    
+    # Si no hay caché válido, consultar Spotify API
     sp = spotipy.Spotify(auth=token)
     results = sp.search(q=query, type='track', limit=5)
     tracks = []
@@ -81,7 +182,14 @@ def search():
             'image': item['album']['images'][0]['url'] if item['album']['images'] else None,
             'preview': item['preview_url']
         })
-    return jsonify({'results': tracks})
+    
+    # Guardar en caché
+    SEARCH_CACHE[query_lower] = {
+        'results': tracks,
+        'timestamp': time.time()
+    }
+    
+    return jsonify({'results': tracks, 'cached': False})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8888)

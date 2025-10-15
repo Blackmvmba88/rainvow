@@ -3,6 +3,17 @@
 Se conecta a un servidor OpenRGB (local o remoto) y cambia los colores
 de un teclado en un ciclo de arcoíris. Puede mostrarse una pequeña
 representación del color actual en la terminal.
+
+Requisitos:
+    - Python 3
+    - pip install openrgb-python
+    - Un servidor OpenRGB ejecutándose con la opción --server
+
+Uso:
+    python keyboard_rgb.py --show --host 127.0.0.1
+
+El programa se ejecuta hasta recibir Ctrl+C, momento en el cual
+apaga las luces del teclado.
 """
 
 import argparse
@@ -14,7 +25,22 @@ from openrgb.utils import RGBColor
 
 
 def rainbow_cycle(device, steps=360, delay=0.05, show=False):
-    """Recorre los colores del arcoíris en el dispositivo."""
+    """Recorre los colores del arcoíris en el dispositivo RGB.
+    
+    Convierte valores HSV a RGB para crear una transición suave de colores
+    a través del espectro del arcoíris completo.
+    
+    Args:
+        device: Dispositivo OpenRGB a controlar
+        steps: Número de pasos en el ciclo de colores (default: 360 para 1 grado por paso)
+        delay: Pausa en segundos entre cambios de color (default: 0.05)
+        show: Si True, muestra el color actual en la terminal (default: False)
+        
+    Example:
+        >>> client = OpenRGBClient()
+        >>> keyboard = client.devices[0]
+        >>> rainbow_cycle(keyboard, steps=180, delay=0.1, show=True)
+    """
     for i in range(steps):
         hue = i / float(steps)
         r, g, b = [int(255 * x) for x in colorsys.hsv_to_rgb(hue, 1, 1)]
