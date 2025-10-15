@@ -16,6 +16,72 @@ Ver [CHANGELOG.md](CHANGELOG.md) para más detalles sobre las funcionalidades im
 - **[CHANGELOG.md](CHANGELOG.md)**: Historial de cambios y funcionalidades implementadas
 - **[ARCHITECTURE.md](ARCHITECTURE.md)**: Documentación de la arquitectura modular del proyecto
 - **[TESTING.md](TESTING.md)**: Documentación de pruebas realizadas y resultados
+- **[TEAM.md](TEAM.md)**: Guía de colaboración y reuniones del equipo
+
+## 🚀 Instalación Rápida
+
+### Requisitos Previos
+- Python 3.8 o superior
+- pip (gestor de paquetes de Python)
+- Micrófono (opcional, para ondads.py)
+- OpenRGB (opcional, para keyboard_rgb.py)
+
+### Instalación de Dependencias
+
+```bash
+# Instalar todas las dependencias
+pip install -r requirements.txt
+
+# O instalar solo las necesarias para cada componente:
+
+# Para visualizador de audio (ondads.py)
+pip install numpy sounddevice rich colorama
+
+# Para Spotify Live
+pip install spotipy flask
+
+# Para control RGB del teclado
+pip install openrgb-python
+
+# Para capturas de pantalla
+pip install pyautogui colorama
+```
+
+## 🔧 Configuración
+
+### Variables de Entorno para Spotify Live
+
+Antes de usar `spotify_live/`, configura las siguientes variables de entorno:
+
+```bash
+export SPOTIPY_CLIENT_ID='tu_client_id'
+export SPOTIPY_CLIENT_SECRET='tu_client_secret'
+export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+export FLASK_SECRET='tu_clave_secreta_segura'
+```
+
+Para obtener las credenciales de Spotify:
+1. Ve a [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Crea una nueva aplicación
+3. Copia el Client ID y Client Secret
+4. Añade `http://localhost:8888/callback` a las Redirect URIs
+
+## 📊 Optimización y Rendimiento
+
+### Consultas a API de Spotify
+
+La aplicación `spotify_live/` implementa:
+- ✅ Gestión eficiente de tokens con renovación automática
+- ✅ Manejo robusto de errores y timeouts
+- ✅ Límites de consulta configurables (5 resultados por búsqueda)
+- ✅ Validación de parámetros antes de hacer consultas
+
+### Mejoras de Rendimiento
+
+Para optimizar el rendimiento del visualizador de audio:
+- El sistema usa ganancia adaptativa para ajustar niveles automáticamente
+- FFT optimizado con numpy para procesamiento rápido
+- Actualización visual eficiente con rich console
 
 ## `spotify_live/`
 Aplicación web Flask que integra login/registro con Spotify OAuth.
