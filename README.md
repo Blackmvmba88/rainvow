@@ -118,6 +118,14 @@ y buscar canciones en el catálogo de Spotify.
 
 Ver [spotify_live/README.md](spotify_live/README.md) para instrucciones de uso.
 
+## `holi.py`
+Saludo colorido animado que muestra "HOLI!" con colores del arcoíris.
+Un pequeño script de bienvenida con el estilo visual del proyecto.
+
+```bash
+python3 holi.py
+```
+
 ## `ondads.py`
 Visualiza un arcoíris animado en la terminal sincronizado con el audio
 capturado por el micrófono.
