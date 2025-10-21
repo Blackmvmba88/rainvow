@@ -155,6 +155,28 @@ usar la opción `--host` para indicar su dirección.
 python keyboard_rgb.py --show --host 127.0.0.1
 ```
 Interrumpe con `Ctrl+C` para apagar las luces.
+
+## `hydra_observer.py`
+Monitorea el sistema en tiempo real, detectando contextos de trabajo y 
+registrando eventos del sistema. Puede detectar ventanas específicas
+(como archivos ZIP o aplicaciones de música) y grabar audio cuando
+se detecta contexto musical.
+
+### Variables de Entorno
+- `HYDRA_CLI`: Ruta al ejecutable de Hydra CLI (por defecto: "hydra")
+- `USER_CONSENT`: Habilita/deshabilita el registro de teclas ("true"/"false", por defecto: "true")
+- `SLEEP_DURATION`: Intervalo entre lecturas del sistema en segundos (por defecto: "2.0")
+
+### Uso
+```bash
+# Con valores por defecto
+python3 hydra_observer.py
+
+# Con configuración personalizada
+USER_CONSENT=false SLEEP_DURATION=5.0 python3 hydra_observer.py
+```
+
+Los logs se guardan en la carpeta `logs/` con formato JSON.
 # Rainvow AR Demo
 
 Este proyecto incluye una sencilla demostración de realidad aumentada con [A-Frame](https://aframe.io/) y [AR.js](https://ar-js-org.github.io/AR.js/). El archivo `ar.html` despliega un cubo 3D animado cuando la cámara detecta el marcador *hiro*.
