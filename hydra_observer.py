@@ -3,6 +3,7 @@ import os
 import time
 import datetime
 import threading
+import subprocess
 import psutil
 from pynput import keyboard, mouse
 import numpy as np
@@ -28,6 +29,8 @@ logs = []
 log_lock = threading.Lock()
 
 HYDRA_CLI = os.environ.get("HYDRA_CLI", "hydra")
+USER_CONSENT = False  # Will be set at runtime after user confirmation
+SLEEP_DURATION = 2  # Seconds between system checks
 
 
 def color(text, c):
@@ -123,6 +126,17 @@ def send_to_hydra(message):
 
 if __name__ == "__main__":
     print(color("Hydra Observer starting...", Fore.GREEN))
+    print(color("⚠️  This tool monitors keyboard and mouse activity.", Fore.YELLOW))
+    print(color("Sensitive windows (password/login) are automatically excluded.", Fore.YELLOW))
+    
+    consent = input(color("Do you consent to keyboard/mouse monitoring? (y/N): ", Fore.CYAN))
+    if consent.lower() == 'y':
+        USER_CONSENT = True
+        print(color("✓ User consent granted. Starting monitoring...", Fore.GREEN))
+    else:
+        USER_CONSENT = False
+        print(color("⚠️  Monitoring disabled. Only system metrics will be logged.", Fore.YELLOW))
+    
     key_listener = keyboard.Listener(on_press=on_key_press)
     mouse_listener = mouse.Listener(on_click=on_click)
     key_listener.start()
