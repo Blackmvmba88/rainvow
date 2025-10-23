@@ -1,3 +1,26 @@
+"""Sistema de monitoreo del sistema con detección de contexto inteligente.
+
+Este módulo monitorea continuamente el uso de recursos del sistema (CPU, memoria),
+registra eventos de teclado y mouse, y detecta contextos relevantes basados en
+la ventana activa (ZIP, música, etc.) para activar acciones automáticas.
+
+Características:
+    - Monitoreo de CPU y memoria en tiempo real
+    - Registro de eventos de teclado y mouse (respetando privacidad)
+    - Detección de ventana activa
+    - Contextos inteligentes que activan acciones (grabación de audio, HUD)
+    - Logs JSON estructurados por sesión
+
+Uso:
+    python3 hydra_observer.py
+
+Variables de entorno:
+    HYDRA_CLI: Path al CLI de Hydra para enviar comandos (opcional)
+
+El programa se ejecuta hasta recibir Ctrl+C. Todos los eventos se guardan
+en logs/session_{timestamp}.json
+"""
+
 import json
 import os
 import time
@@ -29,20 +52,32 @@ logs = []
 log_lock = threading.Lock()
 
 HYDRA_CLI = os.environ.get("HYDRA_CLI", "hydra")
-USER_CONSENT = os.environ.get("USER_CONSENT", "true").lower() in ("true", "1", "yes")
-try:
-    SLEEP_DURATION = float(os.environ.get("SLEEP_DURATION", "2.0"))
-except ValueError:
-    SLEEP_DURATION = 2.0
+USER_CONSENT = True  # Configurable: require user consent for keystroke logging
+SLEEP_DURATION = 2.0  # Seconds between system monitoring checks
 
 
 def color(text, c):
+    """Aplica color al texto usando colorama si está disponible.
+    
+    Args:
+        text: Texto a colorear
+        c: Color de colorama (Fore.RED, Fore.BLUE, etc.)
+        
+    Returns:
+        str: Texto con códigos de color ANSI o texto sin modificar
+    """
     if not COLOR_ENABLED:
         return text
     return f"{c}{text}{Style.RESET_ALL}"
 
 
 def log_event(event_type, info):
+    """Registra un evento en el log de la sesión de forma thread-safe.
+    
+    Args:
+        event_type: Tipo de evento ('key', 'click', 'system', 'audio', 'hydra')
+        info: Información adicional del evento (dict, str, o cualquier JSON serializable)
+    """
     entry = {
         "time": time.time(),
         "event": event_type,
@@ -53,6 +88,12 @@ def log_event(event_type, info):
 
 
 def display_metrics(cpu, mem):
+    """Muestra métricas del sistema con barras visuales en la terminal.
+    
+    Args:
+        cpu: Porcentaje de uso de CPU (0-100)
+        mem: Porcentaje de uso de memoria (0-100)
+    """
     bar_len = 20
     cpu_bar = "█" * int(cpu / 100 * bar_len)
     mem_bar = "█" * int(mem / 100 * bar_len)
@@ -60,6 +101,17 @@ def display_metrics(cpu, mem):
 
 
 def record_audio(duration=5, samplerate=44100):
+    """Graba un clip de audio y lo guarda en el directorio de logs.
+    
+    Útil para capturar loops musicales cuando se detecta contexto de música.
+    
+    Args:
+        duration: Duración de la grabación en segundos (default: 5)
+        samplerate: Frecuencia de muestreo en Hz (default: 44100)
+        
+    Note:
+        Guarda el archivo como numpy array (.npy) para facilitar procesamiento
+    """
     print(color("[Hydra] Capturing audio loop...", Fore.MAGENTA))
     audio = sd.rec(int(samplerate * duration), samplerate=samplerate, channels=2)
     sd.wait()
@@ -70,6 +122,15 @@ def record_audio(duration=5, samplerate=44100):
 
 
 def active_window_title():
+    """Obtiene el título de la ventana activa del sistema.
+    
+    Returns:
+        str or None: Título de la ventana activa, o None si no se puede obtener
+        
+    Note:
+        Requiere pygetwindow instalado. Retorna None si no está disponible
+        o si ocurre un error al consultar ventanas del sistema.
+    """
     if gw is None:
         return None
     try:
@@ -102,6 +163,17 @@ def on_click(x, y, button, pressed):
 shutdown_flag = False
 
 def monitor_system():
+    """Monitorea el sistema continuamente y detecta contextos relevantes.
+    
+    Ejecuta un loop que:
+    - Revisa uso de CPU y memoria cada SLEEP_DURATION segundos
+    - Detecta la ventana activa
+    - Identifica contextos especiales (ZIP, music) en títulos de ventanas
+    - Activa acciones automáticas según el contexto detectado
+    
+    El monitoreo continúa hasta que shutdown_flag se establece a True
+    o se recibe KeyboardInterrupt.
+    """
     global shutdown_flag
     while not shutdown_flag:
         window = active_window_title()
@@ -120,6 +192,15 @@ def monitor_system():
 
 
 def send_to_hydra(message):
+    """Envía un mensaje al CLI de Hydra si está configurado.
+    
+    Args:
+        message: Comando o mensaje a enviar a Hydra CLI
+        
+    Note:
+        El path del CLI se configura con la variable de entorno HYDRA_CLI.
+        Si el CLI no se encuentra, se imprime un error pero no se interrumpe la ejecución.
+    """
     try:
         subprocess.Popen([HYDRA_CLI, message])
         log_event("hydra", message)
