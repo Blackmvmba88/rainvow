@@ -144,13 +144,10 @@ def _clean_expired_cache_unsafe():
     ADVERTENCIA: Esta función debe ser llamada solo cuando cache_lock ya está adquirido.
     No es thread-safe por sí sola.
     """
+    global SEARCH_CACHE
     now = time.time()
-    expired_keys = [
-        k for k, v in SEARCH_CACHE.items() 
-        if now - v['timestamp'] >= CACHE_EXPIRY_SECONDS
-    ]
-    for k in expired_keys:
-        del SEARCH_CACHE[k]
+    SEARCH_CACHE = {k: v for k, v in SEARCH_CACHE.items()
+                    if now - v['timestamp'] < CACHE_EXPIRY_SECONDS}
 
 
 @app.route('/search')
