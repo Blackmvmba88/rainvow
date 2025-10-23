@@ -1,5 +1,9 @@
 # Rainvow Tools
 
+[![CI/CD Pipeline](https://github.com/Blackmvmba88/rainvow/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Blackmvmba88/rainvow/actions/workflows/ci-cd.yml)
+[![Jekyll CI](https://github.com/Blackmvmba88/rainvow/actions/workflows/jekyll-docker.yml/badge.svg)](https://github.com/Blackmvmba88/rainvow/actions/workflows/jekyll-docker.yml)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+
 Este repositorio contiene utilidades de Python para efectos visuales y aplicaciones musicales interactivas.
 
 ## ✅ Estado del Proyecto
@@ -16,6 +20,89 @@ Ver [CHANGELOG.md](CHANGELOG.md) para más detalles sobre las funcionalidades im
 - **[CHANGELOG.md](CHANGELOG.md)**: Historial de cambios y funcionalidades implementadas
 - **[ARCHITECTURE.md](ARCHITECTURE.md)**: Documentación de la arquitectura modular del proyecto
 - **[TESTING.md](TESTING.md)**: Documentación de pruebas realizadas y resultados
+- **[TEAM.md](TEAM.md)**: Guía de colaboración y reuniones del equipo
+
+## 🚀 Instalación Rápida
+
+### Requisitos Previos
+- Python 3.8 o superior
+- pip (gestor de paquetes de Python)
+- Micrófono (opcional, para ondads.py)
+- OpenRGB (opcional, para keyboard_rgb.py)
+
+### Instalación de Dependencias
+
+```bash
+# Instalar todas las dependencias
+pip install -r requirements.txt
+
+# O instalar solo las necesarias para cada componente:
+
+# Para visualizador de audio (ondads.py)
+pip install numpy sounddevice rich colorama
+
+# Para Spotify Live
+pip install spotipy flask
+
+# Para control RGB del teclado
+pip install openrgb-python
+
+# Para capturas de pantalla
+pip install pyautogui colorama
+```
+
+## 🔧 Configuración
+
+### Variables de Entorno para Spotify Live
+
+Antes de usar `spotify_live/`, configura las siguientes variables de entorno:
+
+```bash
+export SPOTIPY_CLIENT_ID='tu_client_id'
+export SPOTIPY_CLIENT_SECRET='tu_client_secret'
+export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+export FLASK_SECRET='tu_clave_secreta_segura'
+```
+
+Para obtener las credenciales de Spotify:
+1. Ve a [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Crea una nueva aplicación
+3. Copia el Client ID y Client Secret
+4. Añade `http://localhost:8888/callback` a las Redirect URIs
+
+## 📊 Optimización y Rendimiento
+
+### Consultas a API de Spotify
+
+La aplicación `spotify_live/` implementa:
+- ✅ Gestión eficiente de tokens con renovación automática
+- ✅ Manejo robusto de errores y timeouts
+- ✅ Límites de consulta configurables (5 resultados por búsqueda)
+- ✅ Validación de parámetros antes de hacer consultas
+
+### Mejoras de Rendimiento
+
+Para optimizar el rendimiento del visualizador de audio:
+- El sistema usa ganancia adaptativa para ajustar niveles automáticamente
+- FFT optimizado con numpy para procesamiento rápido
+- Actualización visual eficiente con rich console
+
+## 🔄 CI/CD y Calidad de Código
+
+El proyecto cuenta con un pipeline de CI/CD completo que incluye:
+
+- **Análisis de Código**: Linting automático con flake8, black e isort
+- **Seguridad**: Análisis con bandit y safety para detectar vulnerabilidades
+- **Validación**: Verificación de sintaxis Python y documentación
+- **Revisiones Automáticas**: Ejecución programada cada lunes
+- **Notificaciones**: Alertas automáticas en caso de fallos
+
+El pipeline se ejecuta automáticamente en:
+- Cada push a `main` o `develop`
+- Cada Pull Request
+- Semanalmente (lunes 9:00 UTC)
+
+Ver el estado actual en los badges al inicio del README.
 
 ## `spotify_live/`
 Aplicación web Flask que integra login/registro con Spotify OAuth.
@@ -30,6 +117,14 @@ y buscar canciones en el catálogo de Spotify.
 - ✅ Interfaz web responsive
 
 Ver [spotify_live/README.md](spotify_live/README.md) para instrucciones de uso.
+
+## `holi.py`
+Saludo colorido animado que muestra "HOLI!" con colores del arcoíris.
+Un pequeño script de bienvenida con el estilo visual del proyecto.
+
+```bash
+python3 holi.py
+```
 
 ## `ondads.py`
 Visualiza un arcoíris animado en la terminal sincronizado con el audio
@@ -60,6 +155,28 @@ usar la opción `--host` para indicar su dirección.
 python keyboard_rgb.py --show --host 127.0.0.1
 ```
 Interrumpe con `Ctrl+C` para apagar las luces.
+
+## `hydra_observer.py`
+Monitorea el sistema en tiempo real, detectando contextos de trabajo y 
+registrando eventos del sistema. Puede detectar ventanas específicas
+(como archivos ZIP o aplicaciones de música) y grabar audio cuando
+se detecta contexto musical.
+
+### Variables de Entorno
+- `HYDRA_CLI`: Ruta al ejecutable de Hydra CLI (por defecto: "hydra")
+- `USER_CONSENT`: Habilita/deshabilita el registro de teclas ("true"/"false", por defecto: "true")
+- `SLEEP_DURATION`: Intervalo entre lecturas del sistema en segundos (por defecto: "2.0")
+
+### Uso
+```bash
+# Con valores por defecto
+python3 hydra_observer.py
+
+# Con configuración personalizada
+USER_CONSENT=false SLEEP_DURATION=5.0 python3 hydra_observer.py
+```
+
+Los logs se guardan en la carpeta `logs/` con formato JSON.
 # Rainvow AR Demo
 
 Este proyecto incluye una sencilla demostración de realidad aumentada con [A-Frame](https://aframe.io/) y [AR.js](https://ar-js-org.github.io/AR.js/). El archivo `ar.html` despliega un cubo 3D animado cuando la cámara detecta el marcador *hiro*.

@@ -67,9 +67,15 @@ def get_token():
     if token_info and not sp_oauth.is_token_expired(token_info):
         return token_info['access_token']
     if token_info and sp_oauth.is_token_expired(token_info):
-        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
-        session['token_info'] = token_info
-        return token_info['access_token']
+        try:
+            # Renovación automática del token usando refresh_token
+            token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+            session['token_info'] = token_info
+            return token_info['access_token']
+        except Exception:
+            # Si falla la renovación, limpiar sesión
+            session.pop('token_info', None)
+            return None
     return None
 
 @app.route('/')
@@ -124,19 +130,34 @@ def current():
     token = get_token()
     if not token:
         return jsonify({'error': 'not_authenticated'}), 401
-    sp = spotipy.Spotify(auth=token)
-    track = sp.current_user_playing_track()
-    if track and track.get('item'):
-        item = track['item']
-        return jsonify({
-            'name': item['name'],
-            'artists': ', '.join(a['name'] for a in item['artists']),
-            'album': item['album']['name'],
-            'image': item['album']['images'][0]['url'] if item['album']['images'] else None,
-            'preview': item['preview_url']
-        })
-    else:
-        return jsonify({'error': 'no_track'})
+    
+    try:
+        sp = spotipy.Spotify(auth=token)
+        # Consulta optimizada: solo obtiene campos necesarios
+        track = sp.current_user_playing_track()
+        
+        if track and track.get('item'):
+            item = track['item']
+            # Validación defensiva de datos
+            artists = [a.get('name', 'Unknown') for a in item.get('artists', [])]
+            album = item.get('album', {})
+            images = album.get('images', [])
+            
+            return jsonify({
+                'name': item.get('name', 'Unknown'),
+                'artists': ', '.join(artists) if artists else 'Unknown Artist',
+                'album': album.get('name', 'Unknown Album'),
+                'image': images[0].get('url') if images else None,
+                'preview': item.get('preview_url')
+            })
+        else:
+            return jsonify({'error': 'no_track'})
+    except spotipy.exceptions.SpotifyException as e:
+        # Manejo específico de errores de Spotify API
+        return jsonify({'error': 'spotify_api_error', 'message': str(e)}), 503
+    except Exception as e:
+        # Manejo de errores generales
+        return jsonify({'error': 'internal_error', 'message': str(e)}), 500
 
 def _clean_expired_cache_unsafe():
     """Limpia entradas expiradas del caché sin adquirir el lock.

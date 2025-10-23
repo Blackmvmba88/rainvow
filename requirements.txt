@@ -1,0 +1,26 @@
+# Dependencias del Proyecto Rainvow
+
+# Audio y Visualización
+numpy>=1.21.0
+sounddevice>=0.4.5
+rich>=13.0.0
+colorama>=0.4.6
+
+# Sistema y Monitoreo
+psutil>=5.9.0
+pynput>=1.7.6
+pygetwindow>=0.0.9
+
+# Spotify Integration
+spotipy>=2.23.0
+flask>=2.3.0
+
+# RGB Keyboard Control
+openrgb-python>=0.2.15
+
+# Screenshots
+pyautogui>=0.9.54
+
+# Testing (opcional)
+pytest>=7.4.0
+pytest-cov>=4.1.0
