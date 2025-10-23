@@ -29,6 +29,6 @@ jobs:
           echo "✅ Build exitoso - directorio _site generado"
           ls -la _site/
         else
-          echo "⚠️  Advertencia: directorio _site no encontrado"
+          echo "⚠️ Advertencia: directorio _site no encontrado"
           exit 1
         fi
