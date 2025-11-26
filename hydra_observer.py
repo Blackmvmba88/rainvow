@@ -29,8 +29,8 @@ logs = []
 log_lock = threading.Lock()
 
 HYDRA_CLI = os.environ.get("HYDRA_CLI", "hydra")
-USER_CONSENT = False  # Will be set at runtime after user confirmation
-SLEEP_DURATION = 2  # Seconds between system checks
+USER_CONSENT = False  # Se establecerá en tiempo de ejecución después de la confirmación del usuario
+SLEEP_DURATION = 2  # Segundos entre comprobaciones del sistema
 
 
 def color(text, c):
@@ -125,17 +125,17 @@ def send_to_hydra(message):
 
 
 if __name__ == "__main__":
-    print(color("Hydra Observer starting...", Fore.GREEN))
-    print(color("⚠️  This tool monitors keyboard and mouse activity.", Fore.YELLOW))
-    print(color("Sensitive windows (password/login) are automatically excluded.", Fore.YELLOW))
+    print(color("Hydra Observer iniciando...", Fore.GREEN))
+    print(color("⚠️  Esta herramienta monitorea la actividad del teclado y el ratón.", Fore.YELLOW))
+    print(color("Las ventanas sensibles (contraseñas/inicio de sesión) se excluyen automáticamente.", Fore.YELLOW))
     
-    consent = input(color("Do you consent to keyboard/mouse monitoring? (y/N): ", Fore.CYAN))
-    if consent.lower() == 'y':
+    consent = input(color("¿Consientes el monitoreo del teclado/ratón? (s/N): ", Fore.CYAN))
+    if consent.lower() == 's':
         USER_CONSENT = True
-        print(color("✓ User consent granted. Starting monitoring...", Fore.GREEN))
+        print(color("✓ Consentimiento del usuario otorgado. Iniciando monitoreo...", Fore.GREEN))
     else:
         USER_CONSENT = False
-        print(color("⚠️  Monitoring disabled. Only system metrics will be logged.", Fore.YELLOW))
+        print(color("⚠️  Monitoreo deshabilitado. Solo se registrarán métricas del sistema.", Fore.YELLOW))
     
     key_listener = keyboard.Listener(on_press=on_key_press)
     mouse_listener = mouse.Listener(on_click=on_click)
