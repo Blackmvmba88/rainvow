@@ -1,3 +1,42 @@
 __pycache__/
 *.pyc
 .env
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.coverage
+coverage.xml
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Logs y outputs
+logs/
+*.log
+bandit-report.json
+
+# macOS
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+*.tmp
