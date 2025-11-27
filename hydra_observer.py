@@ -52,8 +52,8 @@ logs = []
 log_lock = threading.Lock()
 
 HYDRA_CLI = os.environ.get("HYDRA_CLI", "hydra")
-USER_CONSENT = True  # Configurable: require user consent for keystroke logging
-SLEEP_DURATION = 2.0  # Seconds between system monitoring checks
+SLEEP_DURATION = float(os.environ.get("HYDRA_SLEEP_DURATION", "2.0"))
+USER_CONSENT = os.environ.get("HYDRA_USER_CONSENT", "false").lower() in ("true", "1", "yes")
 
 
 def color(text, c):

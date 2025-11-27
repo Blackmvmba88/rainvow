@@ -12,97 +12,49 @@ Este repositorio contiene utilidades de Python para efectos visuales y aplicacio
 - **Componentes Musicales Modulares**: ✅ Implementados exitosamente
 - **Colaboración del Equipo**: ✅ Efectiva
 - **Pruebas Básicas**: ✅ Completadas exitosamente
+- **Documentación y Onboarding**: ✅ Mejorada y actualizada
 
 Ver [CHANGELOG.md](CHANGELOG.md) para más detalles sobre las funcionalidades implementadas.
 
-## 📚 Documentación
+## 🚀 Inicio Rápido
 
-- **[CHANGELOG.md](CHANGELOG.md)**: Historial de cambios y funcionalidades implementadas
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Documentación de la arquitectura modular del proyecto
-- **[TESTING.md](TESTING.md)**: Documentación de pruebas realizadas y resultados
-- **[TEAM.md](TEAM.md)**: Guía de colaboración y reuniones del equipo
-
-## 🚀 Instalación Rápida
-
-### Requisitos Previos
-- Python 3.8 o superior
-- pip (gestor de paquetes de Python)
-- Micrófono (opcional, para ondads.py)
-- OpenRGB (opcional, para keyboard_rgb.py)
-
-### Instalación de Dependencias
+### Instalación Rápida
 
 ```bash
-# Instalar todas las dependencias
+# Clonar el repositorio
+git clone https://github.com/Blackmvmba88/rainvow.git
+cd rainvow
+
+# Instalar dependencias
 pip install -r requirements.txt
 
-# O instalar solo las necesarias para cada componente:
-
-# Para visualizador de audio (ondads.py)
-pip install numpy sounddevice rich colorama
-
-# Para Spotify Live
-pip install spotipy flask
-
-# Para control RGB del teclado
-pip install openrgb-python
-
-# Para capturas de pantalla
-pip install pyautogui colorama
+# Ejecutar el visualizador de audio
+python3 ondads.py
 ```
 
-## 🔧 Configuración
+**Para instrucciones detalladas**, consulta [QUICKSTART.md](QUICKSTART.md).
 
-### Variables de Entorno para Spotify Live
+### Requisitos
 
-Antes de usar `spotify_live/`, configura las siguientes variables de entorno:
+- Python 3.8 o superior
+- Micrófono (para visualizador de audio)
+- Cuenta de Spotify Developer (para integración musical)
 
-```bash
-export SPOTIPY_CLIENT_ID='tu_client_id'
-export SPOTIPY_CLIENT_SECRET='tu_client_secret'
-export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
-export FLASK_SECRET='tu_clave_secreta_segura'
-```
+Ver [requirements.txt](requirements.txt) para la lista completa de dependencias.
 
-Para obtener las credenciales de Spotify:
-1. Ve a [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. Crea una nueva aplicación
-3. Copia el Client ID y Client Secret
-4. Añade `http://localhost:8888/callback` a las Redirect URIs
+## 📚 Documentación
 
-## 📊 Optimización y Rendimiento
+### Documentos Principales
 
-### Consultas a API de Spotify
+- **[QUICKSTART.md](QUICKSTART.md)**: 🚀 **¡Empieza aquí!** Guía de inicio rápido para nuevos usuarios
+- **[PROJECT_STATUS.md](PROJECT_STATUS.md)**: Estado actual del proyecto, métricas y roadmap
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**: Documentación completa de APIs y componentes reutilizables
 
-La aplicación `spotify_live/` implementa:
-- ✅ Gestión eficiente de tokens con renovación automática
-- ✅ Manejo robusto de errores y timeouts
-- ✅ Límites de consulta configurables (5 resultados por búsqueda)
-- ✅ Validación de parámetros antes de hacer consultas
+### Documentos Técnicos
 
-### Mejoras de Rendimiento
-
-Para optimizar el rendimiento del visualizador de audio:
-- El sistema usa ganancia adaptativa para ajustar niveles automáticamente
-- FFT optimizado con numpy para procesamiento rápido
-- Actualización visual eficiente con rich console
-
-## 🔄 CI/CD y Calidad de Código
-
-El proyecto cuenta con un pipeline de CI/CD completo que incluye:
-
-- **Análisis de Código**: Linting automático con flake8, black e isort
-- **Seguridad**: Análisis con bandit y safety para detectar vulnerabilidades
-- **Validación**: Verificación de sintaxis Python y documentación
-- **Revisiones Automáticas**: Ejecución programada cada lunes
-- **Notificaciones**: Alertas automáticas en caso de fallos
-
-El pipeline se ejecuta automáticamente en:
-- Cada push a `main` o `develop`
-- Cada Pull Request
-- Semanalmente (lunes 9:00 UTC)
-
-Ver el estado actual en los badges al inicio del README.
+- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Arquitectura modular del proyecto
+- **[TESTING.md](TESTING.md)**: Pruebas realizadas y resultados
+- **[CHANGELOG.md](CHANGELOG.md)**: Historial de cambios y funcionalidades implementadas
 
 ## `spotify_live/`
 Aplicación web Flask que integra login/registro con Spotify OAuth.
