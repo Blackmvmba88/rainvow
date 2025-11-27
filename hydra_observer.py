@@ -52,8 +52,8 @@ logs = []
 log_lock = threading.Lock()
 
 HYDRA_CLI = os.environ.get("HYDRA_CLI", "hydra")
-SLEEP_DURATION = float(os.environ.get("HYDRA_SLEEP_DURATION", "2.0"))
-USER_CONSENT = os.environ.get("HYDRA_USER_CONSENT", "false").lower() in ("true", "1", "yes")
+USER_CONSENT = False  # Se establecerá en tiempo de ejecución después de la confirmación del usuario
+SLEEP_DURATION = 2  # Segundos entre comprobaciones del sistema
 
 
 def color(text, c):
@@ -209,7 +209,18 @@ def send_to_hydra(message):
 
 
 if __name__ == "__main__":
-    print(color("Hydra Observer starting...", Fore.GREEN))
+    print(color("Hydra Observer iniciando...", Fore.GREEN))
+    print(color("⚠️  Esta herramienta monitorea la actividad del teclado y el ratón.", Fore.YELLOW))
+    print(color("Las ventanas sensibles (contraseñas/inicio de sesión) se excluyen automáticamente.", Fore.YELLOW))
+    
+    consent = input(color("¿Consientes el monitoreo del teclado/ratón? (s/N): ", Fore.CYAN))
+    if consent.lower() == 's':
+        USER_CONSENT = True
+        print(color("✓ Consentimiento del usuario otorgado. Iniciando monitoreo...", Fore.GREEN))
+    else:
+        USER_CONSENT = False
+        print(color("⚠️  Monitoreo deshabilitado. Solo se registrarán métricas del sistema.", Fore.YELLOW))
+    
     key_listener = keyboard.Listener(on_press=on_key_press)
     mouse_listener = mouse.Listener(on_click=on_click)
     key_listener.start()
