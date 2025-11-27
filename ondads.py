@@ -1,3 +1,21 @@
+"""Visualizador de audio en tiempo real con barras de colores del arcoíris.
+
+Este módulo captura audio del micrófono del sistema, analiza las frecuencias
+usando FFT (Fast Fourier Transform), y las visualiza como barras de colores
+del arcoíris en la terminal. Incluye sistema de ganancia adaptativa automática
+para mantener visualización óptima independientemente del volumen de entrada.
+
+Componentes principales:
+    - get_band_amps(): Análisis de frecuencias modulares
+    - audio_source(): Fuente de audio configurable con fallback
+    - run_visualizer(): Loop principal de visualización
+
+Uso:
+    python3 ondads.py
+
+El programa se ejecuta hasta recibir Ctrl+C.
+"""
+
 import numpy as np
 import sounddevice as sd
 from rich.console import Console
@@ -31,7 +49,26 @@ ADAPT_SPEED = 0.1
 
 
 def get_band_amps(audio_block: np.ndarray, fs: int, n_bands: int) -> np.ndarray:
-    """Return amplitude for each frequency band."""
+    """Calcula la amplitud para cada banda de frecuencia del audio.
+    
+    Aplica FFT (Fast Fourier Transform) al bloque de audio y divide el espectro
+    de frecuencias en bandas equiespaciadas, calculando la amplitud máxima
+    de cada banda.
+    
+    Args:
+        audio_block: Array de audio con shape (n_samples, n_channels)
+        fs: Frecuencia de muestreo en Hz (sample rate)
+        n_bands: Número de bandas de frecuencia a generar
+        
+    Returns:
+        Array con las amplitudes logarítmicas de cada banda (log1p aplicado)
+        
+    Example:
+        >>> audio = np.random.randn(2205, 1)
+        >>> amps = get_band_amps(audio, 44100, 7)
+        >>> len(amps)
+        7
+    """
     fft = np.fft.rfft(audio_block[:, 0] * np.hanning(len(audio_block)))
     mag = np.abs(fft)
     freqs = np.fft.rfftfreq(len(audio_block), 1 / fs)
@@ -51,7 +88,24 @@ shift = 0
 
 
 def audio_source():
-    """Yield audio blocks. Falls back to noise if input fails."""
+    """Generador que produce bloques de audio del micrófono o ruido de prueba.
+    
+    Intenta capturar audio del micrófono del sistema. Si falla (por falta de
+    hardware, permisos, o errores), automáticamente usa ruido aleatorio como
+    fuente alternativa para permitir pruebas sin hardware de audio.
+    
+    Yields:
+        np.ndarray: Bloques de audio con shape (BLOCKSIZE, 1)
+        
+    Note:
+        Esta función es un generador infinito. Debe interrumpirse con Ctrl+C
+        o mediante una excepción externa.
+        
+    Example:
+        >>> for block in audio_source():
+        ...     # Procesar block de audio
+        ...     break  # Terminar después del primer bloque
+    """
     try:
         with sd.InputStream(channels=1, samplerate=FS, blocksize=BLOCKSIZE) as stream:
             console.print("Presiona Ctrl+C para detener", style="bold white")
@@ -67,6 +121,19 @@ def audio_source():
 
 
 def run_visualizer():
+    """Ejecuta el visualizador de audio en tiempo real con barras de colores.
+    
+    Loop principal que captura audio, analiza frecuencias, aplica ganancia
+    adaptativa y renderiza barras de colores del arcoíris que representan
+    la amplitud de cada banda de frecuencia.
+    
+    El visualizador usa un sistema de ganancia adaptativa que ajusta
+    automáticamente los niveles para evitar saturación y mantener la
+    visualización óptima independientemente del volumen de entrada.
+    
+    Note:
+        Ejecuta indefinidamente hasta recibir KeyboardInterrupt (Ctrl+C)
+    """
     global shift
     for audio_block in audio_source():
         amps = get_band_amps(audio_block, FS, N_BANDS)

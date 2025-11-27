@@ -1,5 +1,9 @@
 # Rainvow Tools
 
+[![CI/CD Pipeline](https://github.com/Blackmvmba88/rainvow/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Blackmvmba88/rainvow/actions/workflows/ci-cd.yml)
+[![Jekyll CI](https://github.com/Blackmvmba88/rainvow/actions/workflows/jekyll-docker.yml/badge.svg)](https://github.com/Blackmvmba88/rainvow/actions/workflows/jekyll-docker.yml)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+
 Este repositorio contiene utilidades de Python para efectos visuales y aplicaciones musicales interactivas.
 
 ## ✅ Estado del Proyecto
@@ -66,6 +70,14 @@ y buscar canciones en el catálogo de Spotify.
 
 Ver [spotify_live/README.md](spotify_live/README.md) para instrucciones de uso.
 
+## `holi.py`
+Saludo colorido animado que muestra "HOLI!" con colores del arcoíris.
+Un pequeño script de bienvenida con el estilo visual del proyecto.
+
+```bash
+python3 holi.py
+```
+
 ## `ondads.py`
 Visualiza un arcoíris animado en la terminal sincronizado con el audio
 capturado por el micrófono.
@@ -95,6 +107,28 @@ usar la opción `--host` para indicar su dirección.
 python keyboard_rgb.py --show --host 127.0.0.1
 ```
 Interrumpe con `Ctrl+C` para apagar las luces.
+
+## `hydra_observer.py`
+Monitorea el sistema en tiempo real, detectando contextos de trabajo y 
+registrando eventos del sistema. Puede detectar ventanas específicas
+(como archivos ZIP o aplicaciones de música) y grabar audio cuando
+se detecta contexto musical.
+
+### Variables de Entorno
+- `HYDRA_CLI`: Ruta al ejecutable de Hydra CLI (por defecto: "hydra")
+- `USER_CONSENT`: Habilita/deshabilita el registro de teclas ("true"/"false", por defecto: "true")
+- `SLEEP_DURATION`: Intervalo entre lecturas del sistema en segundos (por defecto: "2.0")
+
+### Uso
+```bash
+# Con valores por defecto
+python3 hydra_observer.py
+
+# Con configuración personalizada
+USER_CONSENT=false SLEEP_DURATION=5.0 python3 hydra_observer.py
+```
+
+Los logs se guardan en la carpeta `logs/` con formato JSON.
 # Rainvow AR Demo
 
 Este proyecto incluye una sencilla demostración de realidad aumentada con [A-Frame](https://aframe.io/) y [AR.js](https://ar-js-org.github.io/AR.js/). El archivo `ar.html` despliega un cubo 3D animado cuando la cámara detecta el marcador *hiro*.
