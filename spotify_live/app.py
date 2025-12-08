@@ -31,7 +31,18 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET', 'change-me')
+flask_secret = os.environ.get('FLASK_SECRET', 'change-me')
+app.secret_key = flask_secret
+
+# Advertencia de seguridad si se está usando el secreto por defecto
+if flask_secret == 'change-me':
+    import warnings
+    warnings.warn(
+        "¡ADVERTENCIA DE SEGURIDAD! Usando FLASK_SECRET por defecto. "
+        "Establece la variable de entorno FLASK_SECRET en producción.",
+        RuntimeWarning,
+        stacklevel=2
+    )
 
 # Caché thread-safe para optimizar búsquedas repetidas
 # Estructura: {query: {'results': [...], 'timestamp': time.time()}}

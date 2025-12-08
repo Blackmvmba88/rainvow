@@ -35,6 +35,9 @@ RAINBOW_BASE = [
 ]
 
 N_BANDS = len(RAINBOW_BASE)
+
+# Cache de estilos pre-calculados para mejor rendimiento
+RAINBOW_STYLES = [Style(color=c) for c in RAINBOW_BASE]
 BAR_HEIGHT = 12
 
 FS = 44100
@@ -150,8 +153,9 @@ def run_visualizer():
         for i, amp in enumerate(amps):
             barras = int(amp * BAR_HEIGHT)
             color_idx = (i + shift) % N_BANDS
-            color = Style(color=RAINBOW_BASE[color_idx])
-            barra_str += f"[{color}]" + "█" * barras + " " * (BAR_HEIGHT - barras) + "[/]"
+            # Usar estilo pre-calculado para mejor rendimiento
+            style = RAINBOW_STYLES[color_idx]
+            barra_str += f"[{style}]" + "█" * barras + " " * (BAR_HEIGHT - barras) + "[/]"
         shift = (shift + 1) % N_BANDS
         console.print(barra_str, end="\r", highlight=False, soft_wrap=True)
 
