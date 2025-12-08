@@ -62,7 +62,10 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET', 'rainvow-dashboard-secret')
-socketio = SocketIO(app, cors_allowed_origins="*")
+# CORS: Permitir localhost y 127.0.0.1 para desarrollo local
+# En producción, configurar variable de entorno DASHBOARD_CORS_ORIGINS
+cors_origins = os.environ.get('DASHBOARD_CORS_ORIGINS', 'http://localhost:*,http://127.0.0.1:*')
+socketio = SocketIO(app, cors_allowed_origins=cors_origins)
 
 # Estado global del sistema
 system_state = {
@@ -301,6 +304,10 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('DASHBOARD_PORT', 5000))
     print(f"\n🚀 Dashboard disponible en http://0.0.0.0:{port}")
+    print("⚠️  ADVERTENCIA: Este es un servidor de desarrollo.")
+    print("   Para producción, usar un servidor WSGI como gunicorn")
     print("Presiona Ctrl+C para detener\n")
 
+    # allow_unsafe_werkzeug=True solo para desarrollo local
+    # En producción usar: gunicorn --worker-class eventlet -w 1 dashboard:app
     socketio.run(app, host='0.0.0.0', port=port, debug=False, allow_unsafe_werkzeug=True)
