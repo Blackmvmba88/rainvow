@@ -149,13 +149,15 @@ def run_visualizer():
         amps = amps * gains
         if amps.max() > 0:
             amps = amps / amps.max()
-        barra_str = ""
+        # Usar lista para concatenación eficiente
+        barra_parts = []
         for i, amp in enumerate(amps):
             barras = int(amp * BAR_HEIGHT)
             color_idx = (i + shift) % N_BANDS
             # Usar estilo pre-calculado para mejor rendimiento
             style = RAINBOW_STYLES[color_idx]
-            barra_str += f"[{style}]" + "█" * barras + " " * (BAR_HEIGHT - barras) + "[/]"
+            barra_parts.append(f"[{style}]" + "█" * barras + " " * (BAR_HEIGHT - barras) + "[/]")
+        barra_str = "".join(barra_parts)
         shift = (shift + 1) % N_BANDS
         console.print(barra_str, end="\r", highlight=False, soft_wrap=True)
 

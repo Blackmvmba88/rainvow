@@ -26,6 +26,7 @@ El servidor escucha en http://0.0.0.0:8888
 import os
 import time
 import threading
+import warnings
 from flask import Flask, redirect, request, session, url_for, jsonify, render_template
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -36,7 +37,6 @@ app.secret_key = flask_secret
 
 # Advertencia de seguridad si se está usando el secreto por defecto
 if flask_secret == 'change-me':
-    import warnings
     warnings.warn(
         "¡ADVERTENCIA DE SEGURIDAD! Usando FLASK_SECRET por defecto. "
         "Establece la variable de entorno FLASK_SECRET en producción.",
