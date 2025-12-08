@@ -26,16 +26,16 @@ from openrgb.utils import RGBColor
 
 def rainbow_cycle(device, steps=360, delay=0.05, show=False):
     """Recorre los colores del arcoíris en el dispositivo RGB.
-    
+
     Convierte valores HSV a RGB para crear una transición suave de colores
     a través del espectro del arcoíris completo.
-    
+
     Args:
         device: Dispositivo OpenRGB a controlar
         steps: Número de pasos en el ciclo de colores (default: 360 para 1 grado por paso)
         delay: Pausa en segundos entre cambios de color (default: 0.05)
         show: Si True, muestra el color actual en la terminal (default: False)
-        
+
     Example:
         >>> client = OpenRGBClient()
         >>> keyboard = client.devices[0]
