@@ -28,7 +28,11 @@ cd rainvow
 # Instalar dependencias
 pip install -r requirements.txt
 
-# Ejecutar el visualizador de audio
+# Opción 1: Ejecutar el dashboard unificado (RECOMENDADO)
+python3 dashboard.py
+# Abre http://localhost:5000 en tu navegador
+
+# Opción 2: Ejecutar el visualizador de audio en terminal
 python3 ondads.py
 ```
 
@@ -42,11 +46,32 @@ python3 ondads.py
 
 Ver [requirements.txt](requirements.txt) para la lista completa de dependencias.
 
+## 🌈 Dashboard Unificado
+
+**NUEVO**: Panel web centralizado para monitorear y controlar todos los componentes de Rainvow.
+
+```bash
+python3 dashboard.py
+# Abre http://localhost:5000 en tu navegador
+```
+
+**Características del Dashboard:**
+- 📊 Monitoreo en tiempo real de CPU y memoria
+- 🎵 Visualizador de audio con barras de colores del arcoíris
+- 🪟 Detección de ventana activa
+- 🎧 Integración con Spotify Live
+- ⌨️ Estado de RGB Keyboard
+- 🔗 Enlaces rápidos a todos los demos y utilidades
+- 🔄 Actualizaciones en vivo con WebSocket
+
+Ver [DASHBOARD.md](DASHBOARD.md) para documentación completa y API REST.
+
 ## 📚 Documentación
 
 ### Documentos Principales
 
 - **[QUICKSTART.md](QUICKSTART.md)**: 🚀 **¡Empieza aquí!** Guía de inicio rápido para nuevos usuarios
+- **[DASHBOARD.md](DASHBOARD.md)**: 🌈 **Dashboard Unificado** - WebUI para ver y monitorear todos los componentes
 - **[PROJECT_STATUS.md](PROJECT_STATUS.md)**: Estado actual del proyecto, métricas y roadmap
 - **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**: Documentación completa de APIs y componentes reutilizables
 
