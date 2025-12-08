@@ -1,6 +1,6 @@
 # Dashboard Unificado de Rainvow
 
-![Dashboard Preview](../screenshots/dashboard_preview.png)
+![Dashboard Preview](https://github.com/user-attachments/assets/263e51e3-f66f-42fb-bac9-a173eaf5b768)
 
 ## Descripción
 
