@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌈 Rainvow Dashboard</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            color: #eee;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(90deg, 
+                #ff0000, #ff7700, #ffff00, #00ff00, 
+                #00ffff, #0000ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #aaa;
+            font-size: 1.1em;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-available { background: #00ff00; }
+        .status-unavailable { background: #ff0000; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-icon {
+            font-size: 1.5em;
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .metric {
+            margin: 15px 0;
+        }
+
+        .metric-label {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease, background 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .progress-low { background: linear-gradient(90deg, #00ff00, #7fff00); }
+        .progress-medium { background: linear-gradient(90deg, #ffff00, #ffa500); }
+        .progress-high { background: linear-gradient(90deg, #ff6600, #ff0000); }
+
+        .audio-visualizer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 150px;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .audio-bar {
+            flex: 1;
+            background: linear-gradient(180deg, 
+                rgba(255, 0, 0, 0.8),
+                rgba(255, 119, 0, 0.8),
+                rgba(255, 255, 0, 0.8),
+                rgba(0, 255, 0, 0.8),
+                rgba(0, 255, 255, 0.8),
+                rgba(0, 0, 255, 0.8),
+                rgba(255, 0, 255, 0.8)
+            );
+            border-radius: 5px;
+            transition: height 0.1s ease;
+            min-height: 5px;
+        }
+
+        .window-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.95em;
+            word-break: break-all;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .link-button {
+            display: block;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .link-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid;
+            font-size: 0.9em;
+            z-index: 1000;
+        }
+
+        .connected {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .disconnected {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+
+        .uptime {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            padding: 10px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        <span id="statusText">Conectando...</span>
+    </div>
+
+    <div class="header">
+        <h1>🌈 Rainvow Dashboard</h1>
+        <p>Panel Unificado de Monitoreo y Control</p>
+        
+        <div class="status-bar">
+            <div class="status-badge">
+                <span class="status-indicator {% if audio_available %}status-available{% else %}status-unavailable{% endif %}"></span>
+                Audio: {% if audio_available %}✓{% else %}✗{% endif %}
+            </div>
+            <div class="status-badge">
+                <span class="status-indicator {% if spotify_available %}status-available{% else %}status-unavailable{% endif %}"></span>
+                Spotify: {% if spotify_available %}✓{% else %}✗{% endif %}
+            </div>
+            <div class="status-badge">
+                <span class="status-indicator {% if rgb_available %}status-available{% else %}status-unavailable{% endif %}"></span>
+                RGB: {% if rgb_available %}✓{% else %}✗{% endif %}
+            </div>
+            <div class="status-badge">
+                <span class="status-indicator {% if window_tracking %}status-available{% else %}status-unavailable{% endif %}"></span>
+                Ventanas: {% if window_tracking %}✓{% else %}✗{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Sistema -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">💻</span>
+                <span class="card-title">Sistema</span>
+            </div>
+            <div class="metric">
+                <div class="metric-label">CPU</div>
+                <div class="metric-value" id="cpuValue">0%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill progress-low" id="cpuBar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Memoria</div>
+                <div class="metric-value" id="memValue">0%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill progress-low" id="memBar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="uptime" id="uptime">Uptime: --</div>
+        </div>
+
+        <!-- Audio Visualizer -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">🎵</span>
+                <span class="card-title">Visualizador de Audio</span>
+            </div>
+            {% if audio_available %}
+            <div class="audio-visualizer" id="audioVisualizer">
+                <div class="audio-bar" style="height: 5%"></div>
+                <div class="audio-bar" style="height: 5%"></div>
+                <div class="audio-bar" style="height: 5%"></div>
+                <div class="audio-bar" style="height: 5%"></div>
+                <div class="audio-bar" style="height: 5%"></div>
+                <div class="audio-bar" style="height: 5%"></div>
+                <div class="audio-bar" style="height: 5%"></div>
+            </div>
+            {% else %}
+            <div class="error-message">
+                Audio no disponible. Instalar: pip install sounddevice numpy
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Ventana Activa -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">🪟</span>
+                <span class="card-title">Ventana Activa</span>
+            </div>
+            <div class="window-display" id="activeWindow">
+                {% if window_tracking %}
+                Detectando...
+                {% else %}
+                Seguimiento de ventanas no disponible en este sistema
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Spotify -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">🎧</span>
+                <span class="card-title">Spotify</span>
+            </div>
+            {% if spotify_available %}
+            <div class="metric-label">Estado</div>
+            <div id="spotifyStatus">Verificando...</div>
+            <div class="links-grid" style="margin-top: 15px;">
+                <a href="http://localhost:8888" target="_blank" class="link-button">
+                    Abrir Spotify Live
+                </a>
+            </div>
+            {% else %}
+            <div class="error-message">
+                Spotify no disponible. Instalar: pip install spotipy flask
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- RGB Keyboard -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">⌨️</span>
+                <span class="card-title">RGB Keyboard</span>
+            </div>
+            {% if rgb_available %}
+            <div class="metric-label">Estado del servidor OpenRGB</div>
+            <div class="metric-value" id="rgbStatus">Verificando...</div>
+            <div style="margin-top: 15px; color: #aaa; font-size: 0.9em;">
+                Ejecutar: python3 keyboard_rgb.py --show
+            </div>
+            {% else %}
+            <div class="error-message">
+                OpenRGB no disponible. Instalar: pip install openrgb-python
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Enlaces y Utilidades -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">🔗</span>
+                <span class="card-title">Utilidades y Demos</span>
+            </div>
+            <div class="links-grid">
+                <a href="/ar.html" target="_blank" class="link-button">
+                    🥽 AR Demo
+                </a>
+                <a href="/pdf_overlay.html" target="_blank" class="link-button">
+                    📄 PDF Overlay
+                </a>
+                <a href="/aurawave/" target="_blank" class="link-button">
+                    🌊 AuraWave
+                </a>
+                <a href="https://github.com/Blackmvmba88/rainvow" target="_blank" class="link-button">
+                    📚 GitHub
+                </a>
+            </div>
+            <div style="margin-top: 20px; color: #aaa; font-size: 0.9em;">
+                <strong>Scripts disponibles:</strong><br>
+                • python3 ondads.py - Visualizador en terminal<br>
+                • python3 hydra_observer.py - Monitor del sistema<br>
+                • python3 keyboard_rgb.py - Control RGB<br>
+                • ./live.sh - TikTok streaming setup
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let connected = false;
+
+        // Elementos del DOM
+        const connectionStatus = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('statusText');
+        const cpuValue = document.getElementById('cpuValue');
+        const cpuBar = document.getElementById('cpuBar');
+        const memValue = document.getElementById('memValue');
+        const memBar = document.getElementById('memBar');
+        const activeWindow = document.getElementById('activeWindow');
+        const audioVisualizer = document.getElementById('audioVisualizer');
+        const uptime = document.getElementById('uptime');
+        const spotifyStatus = document.getElementById('spotifyStatus');
+        const rgbStatus = document.getElementById('rgbStatus');
+
+        // Conexión WebSocket
+        socket.on('connect', () => {
+            connected = true;
+            connectionStatus.className = 'connection-status connected';
+            statusText.textContent = '🟢 Conectado';
+            socket.emit('request_update');
+        });
+
+        socket.on('disconnect', () => {
+            connected = false;
+            connectionStatus.className = 'connection-status disconnected';
+            statusText.textContent = '🔴 Desconectado';
+        });
+
+        // Actualización del sistema
+        socket.on('system_update', (data) => {
+            updateSystemMetrics(data.cpu, data.memory);
+            if (activeWindow && data.active_window) {
+                activeWindow.textContent = data.active_window;
+            }
+        });
+
+        // Actualización de audio
+        socket.on('audio_update', (data) => {
+            if (audioVisualizer && data.bands) {
+                updateAudioVisualizer(data.bands);
+            }
+        });
+
+        function updateSystemMetrics(cpu, mem) {
+            if (cpuValue) {
+                cpuValue.textContent = cpu.toFixed(1) + '%';
+                cpuBar.style.width = cpu + '%';
+                cpuBar.className = 'progress-fill ' + getProgressClass(cpu);
+            }
+            if (memValue) {
+                memValue.textContent = mem.toFixed(1) + '%';
+                memBar.style.width = mem + '%';
+                memBar.className = 'progress-fill ' + getProgressClass(mem);
+            }
+        }
+
+        function getProgressClass(value) {
+            if (value < 50) return 'progress-low';
+            if (value < 80) return 'progress-medium';
+            return 'progress-high';
+        }
+
+        function updateAudioVisualizer(bands) {
+            const bars = audioVisualizer.children;
+            for (let i = 0; i < bands.length && i < bars.length; i++) {
+                const height = Math.max(5, bands[i] * 100);
+                bars[i].style.height = height + '%';
+            }
+        }
+
+        // Obtener estado completo cada 5 segundos
+        setInterval(() => {
+            if (connected) {
+                fetch('/api/status')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (uptime) {
+                            const hours = Math.floor(data.uptime_seconds / 3600);
+                            const mins = Math.floor((data.uptime_seconds % 3600) / 60);
+                            uptime.textContent = `Uptime: ${hours}h ${mins}m`;
+                        }
+                        
+                        if (rgbStatus && data.rgb_status) {
+                            const statusMap = {
+                                'conectado': '🟢 Conectado',
+                                'desconectado': '🔴 Desconectado',
+                                'sin_teclado': '🟡 Sin teclado',
+                                'no_disponible': '⚪ No disponible'
+                            };
+                            rgbStatus.textContent = statusMap[data.rgb_status] || data.rgb_status;
+                        }
+                        
+                        if (spotifyStatus && data.spotify) {
+                            spotifyStatus.textContent = data.spotify.message || 'Disponible';
+                        }
+                    })
+                    .catch(err => console.error('Error al obtener estado:', err));
+            }
+        }, 5000);
+
+        // Solicitar actualización inicial después de 500ms
+        setTimeout(() => {
+            if (connected) {
+                socket.emit('request_update');
+            }
+        }, 500);
+    </script>
+</body>
+</html>

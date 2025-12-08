@@ -16,6 +16,10 @@ pygetwindow>=0.0.9; sys_platform != 'darwin'  # No funciona en macOS
 flask>=3.0.0
 spotipy>=2.23.0
 
+# Dashboard unificado (dashboard.py)
+flask-socketio>=5.3.0
+python-socketio>=5.10.0
+
 # RGB keyboard control (keyboard_rgb.py)
 openrgb-python>=0.2.15
 
