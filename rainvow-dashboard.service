@@ -1,0 +1,40 @@
+# Systemd service file para el Dashboard de Rainvow
+#
+# Instalación:
+# 1. Editar este archivo y reemplazar /path/to/rainvow con la ruta real
+# 2. Copiar a /etc/systemd/system/rainvow-dashboard.service
+# 3. sudo systemctl daemon-reload
+# 4. sudo systemctl enable rainvow-dashboard
+# 5. sudo systemctl start rainvow-dashboard
+#
+# Ver logs: sudo journalctl -u rainvow-dashboard -f
+
+[Unit]
+Description=Rainvow Dashboard - WebUI unificado
+After=network.target
+Documentation=https://github.com/Blackmvmba88/rainvow
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+Group=YOUR_GROUP
+WorkingDirectory=/path/to/rainvow
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+Environment="DASHBOARD_PORT=5000"
+Environment="FLASK_SECRET=CHANGE_THIS_SECRET"
+ExecStart=/usr/bin/python3 /path/to/rainvow/dashboard.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Seguridad
+PrivateTmp=yes
+NoNewPrivileges=true
+
+# Límites de recursos
+MemoryLimit=512M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target
