@@ -58,11 +58,11 @@ SLEEP_DURATION = 2  # Segundos entre comprobaciones del sistema
 
 def color(text, c):
     """Aplica color al texto usando colorama si está disponible.
-    
+
     Args:
         text: Texto a colorear
         c: Color de colorama (Fore.RED, Fore.BLUE, etc.)
-        
+
     Returns:
         str: Texto con códigos de color ANSI o texto sin modificar
     """
@@ -73,7 +73,7 @@ def color(text, c):
 
 def log_event(event_type, info):
     """Registra un evento en el log de la sesión de forma thread-safe.
-    
+
     Args:
         event_type: Tipo de evento ('key', 'click', 'system', 'audio', 'hydra')
         info: Información adicional del evento (dict, str, o cualquier JSON serializable)
@@ -89,7 +89,7 @@ def log_event(event_type, info):
 
 def display_metrics(cpu, mem):
     """Muestra métricas del sistema con barras visuales en la terminal.
-    
+
     Args:
         cpu: Porcentaje de uso de CPU (0-100)
         mem: Porcentaje de uso de memoria (0-100)
@@ -102,13 +102,13 @@ def display_metrics(cpu, mem):
 
 def record_audio(duration=5, samplerate=44100):
     """Graba un clip de audio y lo guarda en el directorio de logs.
-    
+
     Útil para capturar loops musicales cuando se detecta contexto de música.
-    
+
     Args:
         duration: Duración de la grabación en segundos (default: 5)
         samplerate: Frecuencia de muestreo en Hz (default: 44100)
-        
+
     Note:
         Guarda el archivo como numpy array (.npy) para facilitar procesamiento
     """
@@ -123,10 +123,10 @@ def record_audio(duration=5, samplerate=44100):
 
 def active_window_title():
     """Obtiene el título de la ventana activa del sistema.
-    
+
     Returns:
         str or None: Título de la ventana activa, o None si no se puede obtener
-        
+
     Note:
         Requiere pygetwindow instalado. Retorna None si no está disponible
         o si ocurre un error al consultar ventanas del sistema.
@@ -162,19 +162,19 @@ def on_click(x, y, button, pressed):
 
 shutdown_flag = False
 
+
 def monitor_system():
     """Monitorea el sistema continuamente y detecta contextos relevantes.
-    
+
     Ejecuta un loop que:
     - Revisa uso de CPU y memoria cada SLEEP_DURATION segundos
     - Detecta la ventana activa
     - Identifica contextos especiales (ZIP, music) en títulos de ventanas
     - Activa acciones automáticas según el contexto detectado
-    
+
     El monitoreo continúa hasta que shutdown_flag se establece a True
     o se recibe KeyboardInterrupt.
     """
-    global shutdown_flag
     while not shutdown_flag:
         window = active_window_title()
         cpu = psutil.cpu_percent(interval=None)
@@ -193,10 +193,10 @@ def monitor_system():
 
 def send_to_hydra(message):
     """Envía un mensaje al CLI de Hydra si está configurado.
-    
+
     Args:
         message: Comando o mensaje a enviar a Hydra CLI
-        
+
     Note:
         El path del CLI se configura con la variable de entorno HYDRA_CLI.
         Si el CLI no se encuentra, se imprime un error pero no se interrumpe la ejecución.
@@ -212,7 +212,7 @@ if __name__ == "__main__":
     print(color("Hydra Observer iniciando...", Fore.GREEN))
     print(color("⚠️  Esta herramienta monitorea la actividad del teclado y el ratón.", Fore.YELLOW))
     print(color("Las ventanas sensibles (contraseñas/inicio de sesión) se excluyen automáticamente.", Fore.YELLOW))
-    
+
     consent = input(color("¿Consientes el monitoreo del teclado/ratón? (s/N): ", Fore.CYAN))
     if consent.lower() == 's':
         USER_CONSENT = True
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     else:
         USER_CONSENT = False
         print(color("⚠️  Monitoreo deshabilitado. Solo se registrarán métricas del sistema.", Fore.YELLOW))
-    
+
     key_listener = keyboard.Listener(on_press=on_key_press)
     mouse_listener = mouse.Listener(on_click=on_click)
     key_listener.start()
@@ -236,4 +236,3 @@ if __name__ == "__main__":
         with open(log_file, "w") as f:
             json.dump(logs, f, indent=2)
         print(color(f"Logs saved to {log_file}", Fore.YELLOW))
-

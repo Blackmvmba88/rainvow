@@ -5,11 +5,7 @@
 max-line-length = 100
 
 # Ignorar algunos errores/warnings específicos
-ignore = 
-    E203,  # whitespace before ':'
-    E501,  # line too long (manejado por black)
-    W503,  # line break before binary operator
-    E402,  # module level import not at top of file (necesario en algunos casos)
+ignore = E203,E501,W503,E402
 
 # Excluir directorios
 exclude =

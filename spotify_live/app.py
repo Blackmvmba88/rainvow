@@ -26,12 +26,23 @@ El servidor escucha en http://0.0.0.0:8888
 import os
 import time
 import threading
+import warnings
 from flask import Flask, redirect, request, session, url_for, jsonify, render_template
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET', 'change-me')
+flask_secret = os.environ.get('FLASK_SECRET', 'change-me')
+app.secret_key = flask_secret
+
+# Advertencia de seguridad si se está usando el secreto por defecto
+if flask_secret == 'change-me':
+    warnings.warn(
+        "¡ADVERTENCIA DE SEGURIDAD! Usando FLASK_SECRET por defecto. "
+        "Establece la variable de entorno FLASK_SECRET en producción.",
+        RuntimeWarning,
+        stacklevel=2
+    )
 
 # Caché thread-safe para optimizar búsquedas repetidas
 # Estructura: {query: {'results': [...], 'timestamp': time.time()}}
@@ -50,15 +61,16 @@ sp_oauth = SpotifyOAuth(client_id=CLIENT_ID,
                         redirect_uri=REDIRECT_URI,
                         scope=SCOPE)
 
+
 def get_token():
     """Obtiene un token de acceso válido de Spotify desde la sesión.
-    
+
     Verifica si existe un token en la sesión, comprueba su validez,
     y lo renueva automáticamente si está expirado usando el refresh token.
-    
+
     Returns:
         str or None: Token de acceso válido, o None si no hay sesión activa
-        
+
     Note:
         Esta función centraliza la lógica de gestión de tokens OAuth,
         facilitando el mantenimiento y reduciendo código duplicado.
@@ -78,10 +90,11 @@ def get_token():
             return None
     return None
 
+
 @app.route('/')
 def index():
     """Página principal de la aplicación.
-    
+
     Muestra la interfaz de usuario y pasa el estado de autenticación
     al template para mostrar/ocultar elementos según corresponda.
     """
@@ -89,20 +102,22 @@ def index():
     logged_in = token is not None
     return render_template('index.html', logged_in=logged_in)
 
+
 @app.route('/login')
 def login():
     """Inicia el flujo de autenticación OAuth con Spotify.
-    
+
     Redirige al usuario a la página de autorización de Spotify
     donde puede dar permisos a la aplicación.
     """
     auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
 
+
 @app.route('/callback')
 def callback():
     """Procesa el callback de OAuth después de la autorización.
-    
+
     Spotify redirige aquí después de que el usuario autoriza la app.
     Intercambia el código de autorización por tokens de acceso
     y los guarda en la sesión del usuario.
@@ -112,17 +127,18 @@ def callback():
     session['token_info'] = token_info
     return redirect(url_for('index'))
 
+
 @app.route('/current')
 def current():
     """API endpoint que retorna información de la canción actual.
-    
+
     Consulta la API de Spotify para obtener la canción que el usuario
     está reproduciendo en este momento.
-    
+
     Returns:
         JSON con datos de la canción (nombre, artistas, álbum, imagen, preview)
         o error si no hay autenticación o no hay canción reproduciéndose
-        
+
     Status Codes:
         200: Canción encontrada y retornada exitosamente
         401: No autenticado
@@ -130,19 +146,19 @@ def current():
     token = get_token()
     if not token:
         return jsonify({'error': 'not_authenticated'}), 401
-    
+
     try:
         sp = spotipy.Spotify(auth=token)
         # Consulta optimizada: solo obtiene campos necesarios
         track = sp.current_user_playing_track()
-        
+
         if track and track.get('item'):
             item = track['item']
             # Validación defensiva de datos
             artists = [a.get('name', 'Unknown') for a in item.get('artists', [])]
             album = item.get('album', {})
             images = album.get('images', [])
-            
+
             return jsonify({
                 'name': item.get('name', 'Unknown'),
                 'artists': ', '.join(artists) if artists else 'Unknown Artist',
@@ -159,9 +175,10 @@ def current():
         # Manejo de errores generales
         return jsonify({'error': 'internal_error', 'message': str(e)}), 500
 
+
 def _clean_expired_cache_unsafe():
     """Limpia entradas expiradas del caché sin adquirir el lock.
-    
+
     ADVERTENCIA: Esta función debe ser llamada solo cuando cache_lock ya está adquirido.
     No es thread-safe por sí sola.
     """
@@ -174,20 +191,20 @@ def _clean_expired_cache_unsafe():
 @app.route('/search')
 def search():
     """API endpoint para búsqueda de canciones en Spotify.
-    
+
     Busca canciones en el catálogo de Spotify usando el query proporcionado
     y retorna los primeros 5 resultados con información relevante.
-    
+
     Implementa caché thread-safe en memoria para optimizar búsquedas repetidas,
     reduciendo llamadas innecesarias a la API de Spotify. El caché tiene límite
     de tamaño y limpieza automática de entradas expiradas.
-    
+
     Query Parameters:
         q: Término de búsqueda
-        
+
     Returns:
         JSON con array de resultados, cada uno con nombre, artistas, imagen y preview
-        
+
     Status Codes:
         200: Búsqueda exitosa (puede tener 0 resultados)
         401: No autenticado
@@ -195,11 +212,11 @@ def search():
     token = get_token()
     if not token:
         return jsonify({'error': 'not_authenticated'}), 401
-    
+
     query = request.args.get('q', '')
     if not query:
         return jsonify({'results': []})
-    
+
     # Verificar caché primero (thread-safe)
     query_lower = query.lower()
     with cache_lock:
@@ -208,16 +225,16 @@ def search():
             # Verificar si el caché no ha expirado
             if time.time() - cached['timestamp'] < CACHE_EXPIRY_SECONDS:
                 return jsonify({'results': cached['results'], 'cached': True})
-        
+
         # Limpiar caché si ha crecido demasiado
         if len(SEARCH_CACHE) >= CACHE_MAX_SIZE:
             _clean_expired_cache_unsafe()
             # Si aún está lleno después de limpiar, remover la entrada más antigua
             if len(SEARCH_CACHE) >= CACHE_MAX_SIZE:
-                oldest_key = min(SEARCH_CACHE.keys(), 
-                               key=lambda k: SEARCH_CACHE[k]['timestamp'])
+                oldest_key = min(SEARCH_CACHE.keys(),
+                                 key=lambda k: SEARCH_CACHE[k]['timestamp'])
                 del SEARCH_CACHE[oldest_key]
-    
+
     # Si no hay caché válido, consultar Spotify API
     sp = spotipy.Spotify(auth=token)
     results = sp.search(q=query, type='track', limit=5)
@@ -229,15 +246,16 @@ def search():
             'image': item['album']['images'][0]['url'] if item['album']['images'] else None,
             'preview': item['preview_url']
         })
-    
+
     # Guardar en caché (thread-safe)
     with cache_lock:
         SEARCH_CACHE[query_lower] = {
             'results': tracks,
             'timestamp': time.time()
         }
-    
+
     return jsonify({'results': tracks, 'cached': False})
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8888)

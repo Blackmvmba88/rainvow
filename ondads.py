@@ -35,6 +35,9 @@ RAINBOW_BASE = [
 ]
 
 N_BANDS = len(RAINBOW_BASE)
+
+# Cache de estilos pre-calculados para mejor rendimiento
+RAINBOW_STYLES = [Style(color=c) for c in RAINBOW_BASE]
 BAR_HEIGHT = 12
 
 FS = 44100
@@ -50,19 +53,19 @@ ADAPT_SPEED = 0.1
 
 def get_band_amps(audio_block: np.ndarray, fs: int, n_bands: int) -> np.ndarray:
     """Calcula la amplitud para cada banda de frecuencia del audio.
-    
+
     Aplica FFT (Fast Fourier Transform) al bloque de audio y divide el espectro
     de frecuencias en bandas equiespaciadas, calculando la amplitud máxima
     de cada banda.
-    
+
     Args:
         audio_block: Array de audio con shape (n_samples, n_channels)
         fs: Frecuencia de muestreo en Hz (sample rate)
         n_bands: Número de bandas de frecuencia a generar
-        
+
     Returns:
         Array con las amplitudes logarítmicas de cada banda (log1p aplicado)
-        
+
     Example:
         >>> audio = np.random.randn(2205, 1)
         >>> amps = get_band_amps(audio, 44100, 7)
@@ -89,18 +92,18 @@ shift = 0
 
 def audio_source():
     """Generador que produce bloques de audio del micrófono o ruido de prueba.
-    
+
     Intenta capturar audio del micrófono del sistema. Si falla (por falta de
     hardware, permisos, o errores), automáticamente usa ruido aleatorio como
     fuente alternativa para permitir pruebas sin hardware de audio.
-    
+
     Yields:
         np.ndarray: Bloques de audio con shape (BLOCKSIZE, 1)
-        
+
     Note:
         Esta función es un generador infinito. Debe interrumpirse con Ctrl+C
         o mediante una excepción externa.
-        
+
     Example:
         >>> for block in audio_source():
         ...     # Procesar block de audio
@@ -122,15 +125,15 @@ def audio_source():
 
 def run_visualizer():
     """Ejecuta el visualizador de audio en tiempo real con barras de colores.
-    
+
     Loop principal que captura audio, analiza frecuencias, aplica ganancia
     adaptativa y renderiza barras de colores del arcoíris que representan
     la amplitud de cada banda de frecuencia.
-    
+
     El visualizador usa un sistema de ganancia adaptativa que ajusta
     automáticamente los niveles para evitar saturación y mantener la
     visualización óptima independientemente del volumen de entrada.
-    
+
     Note:
         Ejecuta indefinidamente hasta recibir KeyboardInterrupt (Ctrl+C)
     """
@@ -146,12 +149,15 @@ def run_visualizer():
         amps = amps * gains
         if amps.max() > 0:
             amps = amps / amps.max()
-        barra_str = ""
+        # Usar lista para concatenación eficiente
+        barra_parts = []
         for i, amp in enumerate(amps):
             barras = int(amp * BAR_HEIGHT)
             color_idx = (i + shift) % N_BANDS
-            color = Style(color=RAINBOW_BASE[color_idx])
-            barra_str += f"[{color}]" + "█" * barras + " " * (BAR_HEIGHT - barras) + "[/]"
+            # Usar estilo pre-calculado para mejor rendimiento
+            style = RAINBOW_STYLES[color_idx]
+            barra_parts.append(f"[{style}]" + "█" * barras + " " * (BAR_HEIGHT - barras) + "[/]")
+        barra_str = "".join(barra_parts)
         shift = (shift + 1) % N_BANDS
         console.print(barra_str, end="\r", highlight=False, soft_wrap=True)
 
