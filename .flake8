@@ -1,13 +1,6 @@
 [flake8]
-# Configuración de flake8 para el proyecto Rainvow
-
-# Longitud máxima de línea
 max-line-length = 100
-
-# Ignorar algunos errores/warnings específicos
-ignore = E203,E501,W503,E402
-
-# Excluir directorios
+ignore = E203, E501, W503, E402
 exclude =
     .git,
     __pycache__,
@@ -22,10 +15,6 @@ exclude =
     dist,
     logs,
     screenshots
-
-# Complejidad máxima
 max-complexity = 10
-
-# Conteo de errores
 count = True
 statistics = True
