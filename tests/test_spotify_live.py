@@ -28,7 +28,7 @@ def test_token_validation():
     # Test básico de lógica (sin dependencias externas)
     token_info = None
     assert token_info is None, "Token debe ser None inicialmente"
-    
+
     # Simular token válido (expires_at lejano en el futuro)
     FUTURE_TIMESTAMP = 9999999999  # Timestamp muy lejano
     token_info = {'access_token': 'test_token', 'expires_at': FUTURE_TIMESTAMP}
@@ -42,13 +42,13 @@ def test_search_params_validation():
     query = "   test query   "
     query_cleaned = query.strip()
     assert query_cleaned == "test query", "Query debe limpiarse de espacios"
-    
+
     # Test de límite máximo
     MAX_LIMIT = 20
     test_limit_high = 25
     limit = min(int(str(test_limit_high)), MAX_LIMIT)
     assert limit == MAX_LIMIT, "Límite debe ser máximo 20"
-    
+
     # Test de límite válido
     test_limit_low = 5
     limit = min(int(str(test_limit_low)), MAX_LIMIT)

@@ -25,15 +25,16 @@ ASCII_LINES = [
     " {q2} {aq} {q3}"
 ]
 
+
 def show_pentaquark(colors):
     """Muestra una representación visual de un pentaquark con colores animados.
-    
+
     Renderiza un pentaquark (partícula subatómica con 4 quarks y 1 antiquark)
     usando caracteres ASCII coloreados.
-    
+
     Args:
         colors: Lista de 4 colores de colorama para los quarks
-        
+
     Note:
         El antiquark siempre se muestra en color magenta para diferenciarlo
     """
@@ -44,6 +45,7 @@ def show_pentaquark(colors):
     print(ASCII_LINES[1].format(q2=q2, aq=ANTIQ, q3=q3))
     print("\nCuatro quarks y un antiquark en una partícula.")
     print("Presiona Ctrl+C para salir.")
+
 
 if __name__ == '__main__':
     i = 0
@@ -56,4 +58,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         os.system('clear')
         print('Hasta luego!')
-

@@ -26,28 +26,28 @@ RAINBOW_COLORS = [
 def show_greeting():
     """Muestra un saludo colorido animado."""
     console.clear()
-    
+
     # Crear el texto "HOLI!" con colores del arcoíris
     mensaje = "HOLI!"
-    
+
     for i in range(len(RAINBOW_COLORS)):
         console.clear()
         text = Text()
-        
+
         for j, letra in enumerate(mensaje):
             color_idx = (j + i) % len(RAINBOW_COLORS)
             text.append(letra, style=RAINBOW_COLORS[color_idx])
-        
+
         console.print(text, justify="center", style="bold")
         console.print("\nGood Vibes! ✨🌈", justify="center", style="italic cyan")
         time.sleep(0.3)
-    
+
     console.clear()
     # Mensaje final
     text = Text()
     for j, letra in enumerate(mensaje):
         text.append(letra, style=RAINBOW_COLORS[j % len(RAINBOW_COLORS)])
-    
+
     console.print(text, justify="center", style="bold")
     console.print("\nGood Vibes! ✨🌈", justify="center", style="italic cyan")
     console.print("\nBienvenido a Rainvow Tools", justify="center", style="dim white")
